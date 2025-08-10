@@ -33,6 +33,12 @@ export default function InvoiceDetail() {
       setInvoice(data);
     } catch (error) {
       console.error('Failed to fetch invoice:', error);
+      
+      // If invoice not found, it might be due to serverless cold start
+      // Show more helpful error message
+      if (error.response?.status === 404) {
+        console.log('Invoice not found - this may be due to serverless cold start or the invoice was not saved properly');
+      }
     } finally {
       setLoading(false);
     }
@@ -87,8 +93,33 @@ export default function InvoiceDetail() {
 
   if (!invoice) {
     return (
-      <div className="text-center py-12">
-        <p className="text-gray-500">Invoice not found</p>
+      <div className="max-w-4xl mx-auto text-center py-12">
+        <div className="bg-red-50 border border-red-200 rounded-lg p-6">
+          <h2 className="text-lg font-semibold text-red-800 mb-2">Invoice Not Found</h2>
+          <p className="text-red-600 mb-4">
+            The invoice with ID "{id}" could not be found.
+          </p>
+          <p className="text-sm text-red-600 mb-4">
+            This may occur due to:
+            <br />• Serverless function cold start (data reset)
+            <br />• Invoice was not saved properly
+            <br />• Invalid invoice ID
+          </p>
+          <div className="flex justify-center gap-2">
+            <button 
+              onClick={() => navigate('/dashboard')}
+              className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
+            >
+              Back to Dashboard
+            </button>
+            <button 
+              onClick={() => window.location.reload()}
+              className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+            >
+              Refresh Page
+            </button>
+          </div>
+        </div>
       </div>
     );
   }

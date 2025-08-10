@@ -3,10 +3,20 @@ import { getInvoices, setInvoices, calculateTotals } from '../_data/invoices.js'
 export default function handler(req, res) {
   const { id } = req.query || {};
   const invoices = getInvoices();
+  
+  // Debug logging
+  console.log(`[DEBUG] Looking for invoice ID: "${id}"`);
+  console.log(`[DEBUG] Available invoice IDs:`, invoices.map(inv => inv.id));
+  
   const invoiceIndex = invoices.findIndex((inv) => inv.id === id);
 
   if (invoiceIndex === -1) {
-    return res.status(404).json({ error: 'Invoice not found' });
+    console.log(`[DEBUG] Invoice not found - ID "${id}" not in available IDs`);
+    return res.status(404).json({ 
+      error: 'Invoice not found',
+      requestedId: id,
+      availableIds: invoices.map(inv => inv.id)
+    });
   }
 
   if (req.method === 'GET') {

@@ -37,10 +37,23 @@ export default function handler(req, res) {
 
     const invoices = getInvoices();
     const totals = calculateTotals(items);
-    const number = String(invoices.length + 1).padStart(4, '0');
+    
+    // Generate unique invoice number by finding the highest existing number + 1
+    const existingNumbers = invoices.map(inv => parseInt(inv.number, 10)).filter(n => !isNaN(n));
+    const nextNumber = existingNumbers.length > 0 ? Math.max(...existingNumbers) + 1 : 1;
+    const number = String(nextNumber).padStart(4, '0');
+    const id = 'inv_' + number;
+
+    // Ensure ID is unique (fallback protection)
+    let uniqueId = id;
+    let counter = 1;
+    while (invoices.some(inv => inv.id === uniqueId)) {
+      uniqueId = `inv_${number}_${counter}`;
+      counter++;
+    }
 
     const newInvoice = {
-      id: 'inv_' + number,
+      id: uniqueId,
       number,
       client,
       items,
@@ -56,7 +69,14 @@ export default function handler(req, res) {
       updatedAt: new Date().toISOString()
     };
 
-    setInvoices([...invoices, newInvoice]);
+    console.log(`[DEBUG] Creating new invoice with ID: "${uniqueId}" and number: "${number}"`);
+    
+    const updatedInvoices = [...invoices, newInvoice];
+    setInvoices(updatedInvoices);
+    
+    console.log(`[DEBUG] Invoice created successfully. Total invoices: ${updatedInvoices.length}`);
+    console.log(`[DEBUG] All invoice IDs:`, updatedInvoices.map(inv => inv.id));
+    
     return res.status(201).json(newInvoice);
   }
 

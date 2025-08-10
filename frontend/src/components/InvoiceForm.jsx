@@ -68,7 +68,13 @@ export default function InvoiceForm() {
         await apiClient.put(`/invoices/${invoice.id}`, { status: 'Sent' });
       }
 
-      navigate('/dashboard');
+      // Navigate to the created/updated invoice detail page, or dashboard if edit
+      if (isEdit) {
+        navigate('/dashboard');
+      } else {
+        // For new invoices, go to the detail page to verify it was created
+        navigate(`/invoices/${invoice.id}`);
+      }
     } catch (error) {
       console.error('Failed to save invoice:', error);
       setErrors({ general: 'Failed to save invoice. Please try again.' });
