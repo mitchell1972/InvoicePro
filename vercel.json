@@ -7,6 +7,12 @@
       "maxDuration": 10
     }
   },
+  "crons": [
+    {
+      "path": "/api/invoices/remind-overdue",
+      "schedule": "0 9 * * *"
+    }
+  ],
   "rewrites": [
     { "source": "/api/(.*)", "destination": "/api/$1" },
     { "source": "/(.*)", "destination": "/$1" }

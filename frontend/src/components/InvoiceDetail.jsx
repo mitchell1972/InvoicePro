@@ -164,6 +164,25 @@ export default function InvoiceDetail() {
               </div>
             </div>
           )}
+
+          {invoice.reminders && invoice.reminders.length > 0 && (
+            <div className="mt-6 pt-6 border-t border-gray-200">
+              <h3 className="text-sm font-medium text-gray-700 mb-3">Reminder History</h3>
+              <div className="space-y-2">
+                {invoice.reminders.map((reminder, index) => (
+                  <div key={index} className="flex justify-between items-center p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                    <div>
+                      <p className="text-sm font-medium text-yellow-800 capitalize">{reminder.type} Reminder</p>
+                      <p className="text-xs text-yellow-600">{reminder.daysPastDue} days past due</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-xs text-yellow-600">{formatDate(reminder.sentAt)}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>

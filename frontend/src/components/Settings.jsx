@@ -14,6 +14,13 @@ export default function Settings() {
       currency: 'GBP',
       taxPercent: 20,
       paymentTerms: 'Net 30'
+    },
+    reminders: {
+      enabled: true,
+      firstReminderDays: 1,
+      secondReminderDays: 7,
+      thirdReminderDays: 15,
+      finalReminderDays: 30
     }
   });
 
@@ -142,6 +149,85 @@ export default function Settings() {
                 <option value="Due on receipt">Due on receipt</option>
               </select>
             </div>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-lg shadow p-6">
+          <h2 className="text-lg font-semibold mb-4">Overdue Reminders</h2>
+          
+          <div className="space-y-4">
+            <div className="flex items-center">
+              <input
+                type="checkbox"
+                id="reminders-enabled"
+                checked={settings.reminders.enabled}
+                onChange={(e) => setSettings({ ...settings, reminders: { ...settings.reminders, enabled: e.target.checked } })}
+                className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+              />
+              <label htmlFor="reminders-enabled" className="ml-2 text-sm text-gray-700">
+                Enable automatic overdue reminders
+              </label>
+            </div>
+
+            {settings.reminders.enabled && (
+              <div className="ml-6 space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">First reminder (days after due date)</label>
+                    <input
+                      type="number"
+                      min="0"
+                      max="365"
+                      value={settings.reminders.firstReminderDays}
+                      onChange={(e) => setSettings({ ...settings, reminders: { ...settings.reminders, firstReminderDays: Number(e.target.value) } })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Second reminder (days after due date)</label>
+                    <input
+                      type="number"
+                      min="0"
+                      max="365"
+                      value={settings.reminders.secondReminderDays}
+                      onChange={(e) => setSettings({ ...settings, reminders: { ...settings.reminders, secondReminderDays: Number(e.target.value) } })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Third reminder (days after due date)</label>
+                    <input
+                      type="number"
+                      min="0"
+                      max="365"
+                      value={settings.reminders.thirdReminderDays}
+                      onChange={(e) => setSettings({ ...settings, reminders: { ...settings.reminders, thirdReminderDays: Number(e.target.value) } })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Final reminder (days after due date)</label>
+                    <input
+                      type="number"
+                      min="0"
+                      max="365"
+                      value={settings.reminders.finalReminderDays}
+                      onChange={(e) => setSettings({ ...settings, reminders: { ...settings.reminders, finalReminderDays: Number(e.target.value) } })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                    />
+                  </div>
+                </div>
+
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                  <p className="text-sm text-blue-800">
+                    <strong>Note:</strong> Reminders are sent daily at 9:00 AM UTC. Only "Sent" invoices that are past their due date will receive reminders.
+                  </p>
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
