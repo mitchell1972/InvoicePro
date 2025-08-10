@@ -88,8 +88,9 @@ export default function handler(req, res) {
           currency: invoice.currency
         });
 
-        // Simulate email sending
-        sendReminderEmail(invoice, reminder);
+        // Simulate email sending (in production, get banking details from user settings)
+        const bankingDetails = req.body.bankingDetails || null;
+        sendReminderEmail(invoice, reminder, bankingDetails);
       }
 
       return invoice;
@@ -115,19 +116,88 @@ export default function handler(req, res) {
   }
 }
 
-function sendReminderEmail(invoice, reminder) {
-  const messages = {
-    first: `Your invoice #${invoice.number} is now overdue. Please submit payment at your earliest convenience.`,
-    second: `Second reminder: Invoice #${invoice.number} is ${reminder.daysPastDue} days overdue. Please contact us if you need assistance.`,
-    third: `Third reminder: Invoice #${invoice.number} is ${reminder.daysPastDue} days overdue. Immediate payment is required.`,
-    final: `Final notice: Invoice #${invoice.number} is ${reminder.daysPastDue} days overdue. Further action may be taken if payment is not received.`
+function sendReminderEmail(invoice, reminder, bankingDetails) {
+  const paymentLink = `${process.env.NEXT_PUBLIC_BASE_URL || ''}/pay/${invoice.id}`;
+  
+  const urgencyLevels = {
+    first: 'Payment Reminder',
+    second: 'Second Payment Reminder',
+    third: 'Urgent Payment Required',
+    final: 'Final Notice - Immediate Action Required'
   };
+
+  const messages = {
+    first: `Your invoice is now overdue. Please submit payment at your earliest convenience.`,
+    second: `This is a second reminder that your invoice is ${reminder.daysPastDue} days overdue. Please contact us if you need assistance.`,
+    third: `This is an urgent reminder that your invoice is ${reminder.daysPastDue} days overdue. Immediate payment is required.`,
+    final: `This is a final notice that your invoice is ${reminder.daysPastDue} days overdue. Further action may be taken if payment is not received immediately.`
+  };
+
+  // Generate banking details section
+  let bankingSection = '';
+  if (bankingDetails && bankingDetails.country) {
+    if (bankingDetails.country === 'GB' && bankingDetails.uk) {
+      const uk = bankingDetails.uk;
+      if (uk.bankName && uk.accountName && uk.sortCode && uk.accountNumber) {
+        bankingSection = `
+BANK TRANSFER DETAILS (UK):
+━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Bank Name: ${uk.bankName}
+Account Name: ${uk.accountName}
+Sort Code: ${uk.sortCode.replace(/(\d{2})(\d{2})(\d{2})/, '$1-$2-$3')}
+Account Number: ${uk.accountNumber}
+
+Please use invoice #${invoice.number} as the payment reference.
+`;
+      }
+    } else if (bankingDetails.country === 'US' && bankingDetails.us) {
+      const us = bankingDetails.us;
+      if (us.bankName && us.accountName && us.routingNumber && us.accountNumber) {
+        bankingSection = `
+BANK TRANSFER DETAILS (US):
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Bank Name: ${us.bankName}
+Account Name: ${us.accountName}
+Routing Number (ABA): ${us.routingNumber}
+Account Number: ${us.accountNumber}
+
+Please use invoice #${invoice.number} as the payment reference.
+`;
+      }
+    }
+  }
+
+  const emailContent = `
+Subject: ${urgencyLevels[reminder.type]} - Invoice #${invoice.number} (${reminder.daysPastDue} days overdue)
+
+Dear ${invoice.client.name},
+
+${messages[reminder.type]}
+
+OVERDUE INVOICE DETAILS:
+━━━━━━━━━━━━━━━━━━━━━━━━━
+Invoice Number: #${invoice.number}
+Original Due Date: ${new Date(invoice.dueDate).toLocaleDateString()}
+Days Overdue: ${reminder.daysPastDue} days
+Amount Due: ${invoice.totals.total.toLocaleString('en-GB', { style: 'currency', currency: invoice.currency || 'GBP' })}
+
+PAYMENT OPTIONS:
+━━━━━━━━━━━━━━━━━
+💳 Online Payment: ${paymentLink}
+${bankingSection}
+${reminder.type === 'final' ? `
+⚠️  URGENT: If payment is not received within 48 hours, this matter may be referred for further action.
+` : ''}
+If you have already made payment, please disregard this reminder. If you have any questions or need to arrange a payment plan, please contact us immediately.
+
+Best regards,
+Your Invoice Team
+`;
 
   // Simulate email sending (replace with actual email service)
   setTimeout(() => {
     console.log(`[EMAIL] ${reminder.type.toUpperCase()} REMINDER sent to ${invoice.client.email}`);
-    console.log(`Subject: ${reminder.type === 'final' ? 'Final Notice' : 'Payment Reminder'} - Invoice #${invoice.number}`);
-    console.log(`Message: ${messages[reminder.type]}`);
-    console.log(`Payment Link: ${process.env.NEXT_PUBLIC_BASE_URL || ''}/pay/${invoice.id}`);
+    console.log(`[EMAIL] Subject: ${urgencyLevels[reminder.type]} - Invoice #${invoice.number}`);
+    console.log(`[EMAIL] Content:`, emailContent.trim());
   }, 100);
 }

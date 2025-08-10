@@ -24,6 +24,23 @@ export default function Settings() {
       secondReminderDays: 7,
       thirdReminderDays: 15,
       finalReminderDays: 30
+    },
+    banking: {
+      country: 'GB', // GB for UK, US for United States
+      // UK fields
+      uk: {
+        bankName: '',
+        accountName: '',
+        accountNumber: '',
+        sortCode: ''
+      },
+      // US fields
+      us: {
+        bankName: '',
+        accountName: '',
+        accountNumber: '',
+        routingNumber: ''
+      }
     }
   });
 
@@ -151,6 +168,198 @@ export default function Settings() {
                 <option value="Net 60">Net 60</option>
                 <option value="Due on receipt">Due on receipt</option>
               </select>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-lg shadow p-6">
+          <h2 className="text-lg font-semibold mb-4">Banking Details</h2>
+          <p className="text-sm text-gray-600 mb-4">
+            These details will be included in invoices and reminder emails for bank transfer payments.
+          </p>
+          
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Banking Country</label>
+              <select
+                value={settings.banking.country}
+                onChange={(e) => setSettings({ 
+                  ...settings, 
+                  banking: { ...settings.banking, country: e.target.value } 
+                })}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+              >
+                <option value="GB">United Kingdom</option>
+                <option value="US">United States</option>
+              </select>
+            </div>
+
+            {settings.banking.country === 'GB' && (
+              <>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Bank Name</label>
+                    <input
+                      type="text"
+                      value={settings.banking.uk.bankName}
+                      onChange={(e) => setSettings({ 
+                        ...settings, 
+                        banking: { 
+                          ...settings.banking, 
+                          uk: { ...settings.banking.uk, bankName: e.target.value } 
+                        } 
+                      })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                      placeholder="e.g. Barclays Bank"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Account Name</label>
+                    <input
+                      type="text"
+                      value={settings.banking.uk.accountName}
+                      onChange={(e) => setSettings({ 
+                        ...settings, 
+                        banking: { 
+                          ...settings.banking, 
+                          uk: { ...settings.banking.uk, accountName: e.target.value } 
+                        } 
+                      })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                      placeholder="Account holder name"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Sort Code</label>
+                    <input
+                      type="text"
+                      value={settings.banking.uk.sortCode}
+                      onChange={(e) => setSettings({ 
+                        ...settings, 
+                        banking: { 
+                          ...settings.banking, 
+                          uk: { ...settings.banking.uk, sortCode: e.target.value.replace(/\D/g, '').slice(0, 6) } 
+                        } 
+                      })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                      placeholder="12-34-56"
+                      maxLength="8"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Account Number</label>
+                    <input
+                      type="text"
+                      value={settings.banking.uk.accountNumber}
+                      onChange={(e) => setSettings({ 
+                        ...settings, 
+                        banking: { 
+                          ...settings.banking, 
+                          uk: { ...settings.banking.uk, accountNumber: e.target.value.replace(/\D/g, '').slice(0, 8) } 
+                        } 
+                      })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                      placeholder="12345678"
+                      maxLength="8"
+                    />
+                  </div>
+                </div>
+              </>
+            )}
+
+            {settings.banking.country === 'US' && (
+              <>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Bank Name</label>
+                    <input
+                      type="text"
+                      value={settings.banking.us.bankName}
+                      onChange={(e) => setSettings({ 
+                        ...settings, 
+                        banking: { 
+                          ...settings.banking, 
+                          us: { ...settings.banking.us, bankName: e.target.value } 
+                        } 
+                      })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                      placeholder="e.g. Bank of America"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Account Name</label>
+                    <input
+                      type="text"
+                      value={settings.banking.us.accountName}
+                      onChange={(e) => setSettings({ 
+                        ...settings, 
+                        banking: { 
+                          ...settings.banking, 
+                          us: { ...settings.banking.us, accountName: e.target.value } 
+                        } 
+                      })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                      placeholder="Account holder name"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Routing Number (ABA)</label>
+                    <input
+                      type="text"
+                      value={settings.banking.us.routingNumber}
+                      onChange={(e) => setSettings({ 
+                        ...settings, 
+                        banking: { 
+                          ...settings.banking, 
+                          us: { ...settings.banking.us, routingNumber: e.target.value.replace(/\D/g, '').slice(0, 9) } 
+                        } 
+                      })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                      placeholder="123456789"
+                      maxLength="9"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Account Number</label>
+                    <input
+                      type="text"
+                      value={settings.banking.us.accountNumber}
+                      onChange={(e) => setSettings({ 
+                        ...settings, 
+                        banking: { 
+                          ...settings.banking, 
+                          us: { ...settings.banking.us, accountNumber: e.target.value.replace(/\D/g, '').slice(0, 17) } 
+                        } 
+                      })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                      placeholder="Account number"
+                      maxLength="17"
+                    />
+                  </div>
+                </div>
+              </>
+            )}
+
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <div className="flex">
+                <div className="flex-shrink-0">
+                  <svg className="h-5 w-5 text-blue-400" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                  </svg>
+                </div>
+                <div className="ml-3">
+                  <p className="text-sm text-blue-800">
+                    <strong>Security Note:</strong> Your banking details are stored locally and included in invoice emails. 
+                    Never share these details with untrusted parties.
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
         </div>

@@ -9,11 +9,21 @@ export default function InvoiceDetail() {
   const navigate = useNavigate();
   const [invoice, setInvoice] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [bankingDetails, setBankingDetails] = useState(null);
 
   useEffect(() => {
     fetchInvoice();
+    loadBankingDetails();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
+
+  const loadBankingDetails = () => {
+    const settings = localStorage.getItem('invoiceSettings');
+    if (settings) {
+      const parsed = JSON.parse(settings);
+      setBankingDetails(parsed.banking);
+    }
+  };
 
   const fetchInvoice = async () => {
     try {
@@ -28,10 +38,24 @@ export default function InvoiceDetail() {
 
   const handleSend = async () => {
     try {
-      await apiClient.post('/invoices/send', { invoiceId: invoice.id, recipientEmail: invoice.client.email });
+      // Get banking details from localStorage
+      const settings = localStorage.getItem('invoiceSettings');
+      const bankingDetails = settings ? JSON.parse(settings).banking : null;
+      
+      const response = await apiClient.post('/invoices/send', { 
+        invoiceId: invoice.id, 
+        recipientEmail: invoice.client.email,
+        bankingDetails
+      });
+      
       await apiClient.put(`/invoices/${id}`, { status: 'Sent' });
       fetchInvoice();
       alert('Invoice sent successfully!');
+      
+      // Log email content for testing
+      if (response.data.emailContent) {
+        console.log('Email content preview:', response.data.emailContent);
+      }
     } catch (error) {
       console.error('Failed to send invoice:', error);
     }
@@ -162,6 +186,83 @@ export default function InvoiceDetail() {
                 <input type="text" value={paymentLink} readOnly className="flex-1 px-3 py-2 bg-gray-50 border border-gray-300 rounded-lg text-sm" />
                 <button onClick={() => navigator.clipboard.writeText(paymentLink)} className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors text-sm">Copy Link</button>
               </div>
+            </div>
+          )}
+
+          {bankingDetails && (
+            <div className="mt-6 pt-6 border-t border-gray-200">
+              <h3 className="text-sm font-medium text-gray-700 mb-3">Bank Transfer Details</h3>
+              
+              {bankingDetails.country === 'GB' && bankingDetails.uk && bankingDetails.uk.bankName && (
+                <div className="bg-gray-50 rounded-lg p-4">
+                  <h4 className="text-sm font-medium text-gray-800 mb-2">UK Bank Transfer</h4>
+                  <div className="grid grid-cols-2 gap-3 text-sm">
+                    <div>
+                      <span className="text-gray-600">Bank Name:</span>
+                      <p className="font-medium text-gray-900">{bankingDetails.uk.bankName}</p>
+                    </div>
+                    <div>
+                      <span className="text-gray-600">Account Name:</span>
+                      <p className="font-medium text-gray-900">{bankingDetails.uk.accountName}</p>
+                    </div>
+                    <div>
+                      <span className="text-gray-600">Sort Code:</span>
+                      <p className="font-medium text-gray-900 font-mono">
+                        {bankingDetails.uk.sortCode.replace(/(\d{2})(\d{2})(\d{2})/, '$1-$2-$3')}
+                      </p>
+                    </div>
+                    <div>
+                      <span className="text-gray-600">Account Number:</span>
+                      <p className="font-medium text-gray-900 font-mono">{bankingDetails.uk.accountNumber}</p>
+                    </div>
+                  </div>
+                  <p className="text-xs text-gray-600 mt-3">
+                    Please use <strong>#{invoice.number}</strong> as the payment reference.
+                  </p>
+                </div>
+              )}
+
+              {bankingDetails.country === 'US' && bankingDetails.us && bankingDetails.us.bankName && (
+                <div className="bg-gray-50 rounded-lg p-4">
+                  <h4 className="text-sm font-medium text-gray-800 mb-2">US Bank Transfer (ACH)</h4>
+                  <div className="grid grid-cols-2 gap-3 text-sm">
+                    <div>
+                      <span className="text-gray-600">Bank Name:</span>
+                      <p className="font-medium text-gray-900">{bankingDetails.us.bankName}</p>
+                    </div>
+                    <div>
+                      <span className="text-gray-600">Account Name:</span>
+                      <p className="font-medium text-gray-900">{bankingDetails.us.accountName}</p>
+                    </div>
+                    <div>
+                      <span className="text-gray-600">Routing Number (ABA):</span>
+                      <p className="font-medium text-gray-900 font-mono">{bankingDetails.us.routingNumber}</p>
+                    </div>
+                    <div>
+                      <span className="text-gray-600">Account Number:</span>
+                      <p className="font-medium text-gray-900 font-mono">{bankingDetails.us.accountNumber}</p>
+                    </div>
+                  </div>
+                  <p className="text-xs text-gray-600 mt-3">
+                    Please use <strong>#{invoice.number}</strong> as the payment reference.
+                  </p>
+                </div>
+              )}
+
+              {!bankingDetails.country || (bankingDetails.country === 'GB' && !bankingDetails.uk?.bankName) || (bankingDetails.country === 'US' && !bankingDetails.us?.bankName) && (
+                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                  <p className="text-sm text-yellow-800">
+                    Banking details not configured. Set up your bank transfer details in{' '}
+                    <button 
+                      onClick={() => navigate('/settings')}
+                      className="font-medium underline hover:text-yellow-900"
+                    >
+                      Settings
+                    </button>{' '}
+                    to include them in invoice emails.
+                  </p>
+                </div>
+              )}
             </div>
           )}
 
