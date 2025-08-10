@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import apiClient from '../api/client';
 import { validateEmail, validatePassword } from '../utils/validators';
@@ -202,9 +202,9 @@ export default function LoginPage() {
 
           <p className="mt-6 text-center text-sm text-gray-600">
             Don't have an account?{' '}
-            <a href="#" className="text-primary-600 hover:text-primary-500 font-medium">
+            <Link to="/register" className="text-primary-600 hover:text-primary-500 font-medium">
               Start free trial
-            </a>
+            </Link>
           </p>
         </div>
       </div>

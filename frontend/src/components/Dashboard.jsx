@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import apiClient from '../api/client';
 import SummaryCards from './SummaryCards';
 import InvoiceTable from './InvoiceTable';
+import SubscriptionStatus from './SubscriptionStatus';
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -69,6 +70,8 @@ export default function Dashboard() {
           New Invoice
         </button>
       </div>
+
+      <SubscriptionStatus />
 
       <SummaryCards invoices={invoices} />
 

@@ -5,6 +5,8 @@ export default function handler(req, res) {
     timestamp: new Date().toISOString(),
     endpoints: [
       '/api/auth/login',
+      '/api/auth/register',
+      '/api/subscriptions/plans',
       '/api/invoices',
       '/api/invoices/:id',
       '/api/invoices/send',
@@ -15,11 +17,13 @@ export default function handler(req, res) {
       '/api/webhooks/stripe'
     ],
     features: [
-      'Authentication',
+      'User registration & authentication',
+      '7-day free trial subscriptions',
       'Invoice CRUD operations',
       'Email sending',
       'Automatic overdue reminders',
       'Stripe payment integration',
+      'Subscription management',
       'Webhook handling'
     ]
   });

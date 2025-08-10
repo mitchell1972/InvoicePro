@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react';
+import { useAuth } from '../context/AuthContext';
+import { formatDate } from '../utils/money';
 
 export default function Settings() {
+  const { user } = useAuth();
   const [settings, setSettings] = useState({
     company: {
       name: 'Your Company Ltd',
@@ -230,6 +233,91 @@ export default function Settings() {
             )}
           </div>
         </div>
+
+        {user?.subscription && (
+          <div id="subscription" className="bg-white rounded-lg shadow p-6">
+            <h2 className="text-lg font-semibold mb-4">Subscription</h2>
+            
+            <div className="space-y-4">
+              <div className="flex justify-between items-center p-4 border rounded-lg">
+                <div>
+                  <h3 className="font-medium">
+                    {user.subscription.planId === 'yearly' ? 'Yearly Plan' : 'Monthly Plan'}
+                  </h3>
+                  <p className="text-sm text-gray-600">
+                    Status: <span className={`font-medium ${
+                      user.subscription.status === 'active' ? 'text-green-600' :
+                      user.subscription.status === 'trialing' ? 'text-blue-600' :
+                      'text-red-600'
+                    }`}>
+                      {user.subscription.status === 'trialing' ? 'Free Trial' :
+                       user.subscription.status === 'active' ? 'Active' :
+                       user.subscription.status === 'trial_expired' ? 'Trial Expired' :
+                       user.subscription.status}
+                    </span>
+                  </p>
+                  {user.subscription.status === 'trialing' && user.subscription.daysLeftInTrial !== undefined && (
+                    <p className="text-sm text-gray-600">
+                      {user.subscription.daysLeftInTrial} days left in trial
+                    </p>
+                  )}
+                  {user.subscription.currentPeriodEnd && (
+                    <p className="text-sm text-gray-600">
+                      {user.subscription.status === 'active' ? 'Next billing: ' : 'Trial ends: '}
+                      {formatDate(user.subscription.currentPeriodEnd)}
+                    </p>
+                  )}
+                </div>
+                <div className="flex gap-2">
+                  {user.subscription.status === 'trial_expired' && (
+                    <button className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors">
+                      Upgrade Now
+                    </button>
+                  )}
+                  {['trialing', 'active'].includes(user.subscription.status) && (
+                    <>
+                      <button className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
+                        Update Payment
+                      </button>
+                      <button className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
+                        Cancel
+                      </button>
+                    </>
+                  )}
+                </div>
+              </div>
+
+              {user.subscription.status === 'trialing' && (
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                  <h4 className="font-medium text-blue-800 mb-2">Free Trial Active</h4>
+                  <p className="text-sm text-blue-700">
+                    You're currently on a 7-day free trial. Your card will be automatically charged 
+                    {user.subscription.trialEnd && ` on ${formatDate(user.subscription.trialEnd)}`} 
+                    unless you cancel before then.
+                  </p>
+                </div>
+              )}
+
+              {user.subscription.status === 'trial_expired' && (
+                <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                  <h4 className="font-medium text-red-800 mb-2">Trial Expired</h4>
+                  <p className="text-sm text-red-700">
+                    Your free trial has ended. Please upgrade to continue using all features.
+                  </p>
+                </div>
+              )}
+
+              {user.subscription.status === 'past_due' && (
+                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                  <h4 className="font-medium text-yellow-800 mb-2">Payment Failed</h4>
+                  <p className="text-sm text-yellow-700">
+                    Your last payment failed. Please update your payment method to continue your subscription.
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
 
         <div className="flex justify-end">
           <button type="submit" className="px-6 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors">

@@ -5,6 +5,7 @@ import { loadStripe } from '@stripe/stripe-js';
 import { VITE_STRIPE_PUBLISHABLE_KEY } from './config/env';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import LoginPage from './components/LoginPage';
+import RegisterPage from './components/RegisterPage';
 import Dashboard from './components/Dashboard';
 import InvoiceForm from './components/InvoiceForm';
 import InvoiceDetail from './components/InvoiceDetail';
@@ -33,6 +34,7 @@ export default function App() {
     <AuthProvider>
       <Routes>
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/register" element={<RegisterPage />} />
         <Route
           path="/pay/:id"
           element={
