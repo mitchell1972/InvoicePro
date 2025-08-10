@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import apiClient from '../api/client';
 import { formatCurrency, formatDate } from '../utils/money';
 import StatusBadge from './StatusBadge';
+import EmailPreview from './EmailPreview';
 
 export default function InvoiceDetail() {
   const { id } = useParams();
@@ -10,6 +11,7 @@ export default function InvoiceDetail() {
   const [invoice, setInvoice] = useState(null);
   const [loading, setLoading] = useState(true);
   const [bankingDetails, setBankingDetails] = useState(null);
+  const [showEmailPreview, setShowEmailPreview] = useState(false);
 
   useEffect(() => {
     fetchInvoice();
@@ -58,7 +60,12 @@ export default function InvoiceDetail() {
       }
     } catch (error) {
       console.error('Failed to send invoice:', error);
+      alert('Failed to send invoice. Please try again.');
     }
+  };
+
+  const handlePreviewEmail = () => {
+    setShowEmailPreview(true);
   };
 
   const handleMarkPaid = async () => {
@@ -97,14 +104,27 @@ export default function InvoiceDetail() {
         </div>
         <div className="flex gap-2">
           {invoice.status === 'Draft' && (
-            <button onClick={handleSend} className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors">
-              Send Invoice
-            </button>
+            <>
+              <button onClick={handlePreviewEmail} className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
+                Preview Email
+              </button>
+              <button onClick={handleSend} className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors">
+                Send Invoice
+              </button>
+            </>
           )}
           {invoice.status === 'Sent' && (
-            <button onClick={handleMarkPaid} className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">
-              Mark as Paid
-            </button>
+            <>
+              <button onClick={handlePreviewEmail} className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
+                Preview Email
+              </button>
+              <button onClick={handleSend} className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                Resend Invoice
+              </button>
+              <button onClick={handleMarkPaid} className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">
+                Mark as Paid
+              </button>
+            </>
           )}
           <button onClick={() => navigate(`/invoices/${id}/edit`)} className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
             Edit
@@ -286,6 +306,14 @@ export default function InvoiceDetail() {
           )}
         </div>
       </div>
+
+      {showEmailPreview && (
+        <EmailPreview
+          invoice={invoice}
+          onClose={() => setShowEmailPreview(false)}
+          onSend={handleSend}
+        />
+      )}
     </div>
   );
 }

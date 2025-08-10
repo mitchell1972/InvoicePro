@@ -56,7 +56,15 @@ export default function InvoiceForm() {
       }
 
       if (action === 'send') {
-        await apiClient.post('/invoices/send', { invoiceId: invoice.id, recipientEmail: invoice.client.email });
+        // Get banking details from localStorage
+        const settings = localStorage.getItem('invoiceSettings');
+        const bankingDetails = settings ? JSON.parse(settings).banking : null;
+        
+        await apiClient.post('/invoices/send', { 
+          invoiceId: invoice.id, 
+          recipientEmail: invoice.client.email,
+          bankingDetails
+        });
         await apiClient.put(`/invoices/${invoice.id}`, { status: 'Sent' });
       }
 

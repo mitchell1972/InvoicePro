@@ -3,8 +3,28 @@ import { useNavigate } from 'react-router-dom';
 import { formatCurrency, formatDate, isOverdue } from '../utils/money';
 import StatusBadge from './StatusBadge';
 
-export default function InvoiceTable({ invoices, onStatusChange, onDelete }) {
+export default function InvoiceTable({ invoices, onStatusChange, onDelete, selectedInvoices = [], onSelectionChange }) {
   const navigate = useNavigate();
+
+  const handleSelectAll = (checked) => {
+    if (checked) {
+      onSelectionChange(invoices);
+    } else {
+      onSelectionChange([]);
+    }
+  };
+
+  const handleSelectInvoice = (invoice, checked) => {
+    if (checked) {
+      onSelectionChange([...selectedInvoices, invoice]);
+    } else {
+      onSelectionChange(selectedInvoices.filter(inv => inv.id !== invoice.id));
+    }
+  };
+
+  const isSelected = (invoiceId) => {
+    return selectedInvoices.some(inv => inv.id === invoiceId);
+  };
 
   if (invoices.length === 0) {
     return (
@@ -19,6 +39,16 @@ export default function InvoiceTable({ invoices, onStatusChange, onDelete }) {
       <table className="w-full">
         <thead className="bg-gray-50">
           <tr>
+            {onSelectionChange && (
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-12">
+                <input
+                  type="checkbox"
+                  checked={selectedInvoices.length === invoices.length && invoices.length > 0}
+                  onChange={(e) => handleSelectAll(e.target.checked)}
+                  className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+                />
+              </th>
+            )}
             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Invoice</th>
             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Client</th>
             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Issue Date</th>
@@ -33,6 +63,16 @@ export default function InvoiceTable({ invoices, onStatusChange, onDelete }) {
             const overdue = invoice.status === 'Sent' && isOverdue(invoice.dueDate);
             return (
               <tr key={invoice.id} className="hover:bg-gray-50">
+                {onSelectionChange && (
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <input
+                      type="checkbox"
+                      checked={isSelected(invoice.id)}
+                      onChange={(e) => handleSelectInvoice(invoice, e.target.checked)}
+                      className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+                    />
+                  </td>
+                )}
                 <td className="px-6 py-4 whitespace-nowrap">
                   <button onClick={() => navigate(`/invoices/${invoice.id}`)} className="text-primary-600 hover:text-primary-900 font-medium">
                     #{invoice.number}

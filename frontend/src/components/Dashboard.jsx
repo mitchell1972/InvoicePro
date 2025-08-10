@@ -4,6 +4,7 @@ import apiClient from '../api/client';
 import SummaryCards from './SummaryCards';
 import InvoiceTable from './InvoiceTable';
 import SubscriptionStatus from './SubscriptionStatus';
+import BulkActions from './BulkActions';
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -11,6 +12,7 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [filterStatus, setFilterStatus] = useState('');
+  const [selectedInvoices, setSelectedInvoices] = useState([]);
 
   useEffect(() => {
     fetchInvoices();
@@ -24,6 +26,7 @@ export default function Dashboard() {
       if (filterStatus) params.status = filterStatus;
       const { data } = await apiClient.get('/invoices', { params });
       setInvoices(data);
+      setSelectedInvoices([]); // Clear selections when refreshing
     } catch (error) {
       console.error('Failed to fetch invoices:', error);
     } finally {
@@ -75,6 +78,11 @@ export default function Dashboard() {
 
       <SummaryCards invoices={invoices} />
 
+      <BulkActions 
+        selectedInvoices={selectedInvoices}
+        onSuccess={fetchInvoices}
+      />
+
       <div className="bg-white rounded-lg shadow">
         <div className="p-6 border-b border-gray-200">
           <div className="flex flex-col sm:flex-row gap-4">
@@ -99,7 +107,13 @@ export default function Dashboard() {
           </div>
         </div>
 
-        <InvoiceTable invoices={invoices} onStatusChange={handleStatusChange} onDelete={handleDelete} />
+        <InvoiceTable 
+          invoices={invoices} 
+          onStatusChange={handleStatusChange} 
+          onDelete={handleDelete}
+          selectedInvoices={selectedInvoices}
+          onSelectionChange={setSelectedInvoices}
+        />
       </div>
     </div>
   );

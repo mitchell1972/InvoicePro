@@ -1,6 +1,7 @@
 import { getInvoices, setInvoices } from '../_data/invoices.js';
+import resend from '../lib/resend-client.js';
 
-export default function handler(req, res) {
+export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
@@ -88,9 +89,9 @@ export default function handler(req, res) {
           currency: invoice.currency
         });
 
-        // Simulate email sending (in production, get banking details from user settings)
+        // Send actual email using Resend
         const bankingDetails = req.body.bankingDetails || null;
-        sendReminderEmail(invoice, reminder, bankingDetails);
+        await sendReminderEmail(invoice, reminder, bankingDetails);
       }
 
       return invoice;
@@ -116,8 +117,10 @@ export default function handler(req, res) {
   }
 }
 
-function sendReminderEmail(invoice, reminder, bankingDetails) {
+async function sendReminderEmail(invoice, reminder, bankingDetails) {
   const paymentLink = `${process.env.NEXT_PUBLIC_BASE_URL || ''}/pay/${invoice.id}`;
+  const fromEmail = process.env.FROM_EMAIL || 'invoices@yourdomain.com';
+  const companyName = process.env.COMPANY_NAME || 'Your Company';
   
   const urgencyLevels = {
     first: 'Payment Reminder',
@@ -167,10 +170,9 @@ Please use invoice #${invoice.number} as the payment reference.
     }
   }
 
-  const emailContent = `
-Subject: ${urgencyLevels[reminder.type]} - Invoice #${invoice.number} (${reminder.daysPastDue} days overdue)
-
-Dear ${invoice.client.name},
+  const emailSubject = `${urgencyLevels[reminder.type]} - Invoice #${invoice.number} (${reminder.daysPastDue} days overdue)`;
+  
+  const emailContent = `Dear ${invoice.client.name},
 
 ${messages[reminder.type]}
 
@@ -191,13 +193,74 @@ ${reminder.type === 'final' ? `
 If you have already made payment, please disregard this reminder. If you have any questions or need to arrange a payment plan, please contact us immediately.
 
 Best regards,
-Your Invoice Team
-`;
+${companyName}`;
 
-  // Simulate email sending (replace with actual email service)
-  setTimeout(() => {
-    console.log(`[EMAIL] ${reminder.type.toUpperCase()} REMINDER sent to ${invoice.client.email}`);
-    console.log(`[EMAIL] Subject: ${urgencyLevels[reminder.type]} - Invoice #${invoice.number}`);
-    console.log(`[EMAIL] Content:`, emailContent.trim());
-  }, 100);
+  try {
+    const { data, error } = await resend.emails.send({
+      from: `${companyName} <${fromEmail}>`,
+      to: [invoice.client.email],
+      subject: emailSubject,
+      html: formatEmailAsHtml(emailContent),
+      text: emailContent
+    });
+
+    if (error) {
+      console.error(`[EMAIL] Failed to send ${reminder.type} reminder to ${invoice.client.email}:`, error);
+      return false;
+    }
+
+    console.log(`[EMAIL] ${reminder.type.toUpperCase()} REMINDER sent to ${invoice.client.email} via Resend. ID: ${data.id}`);
+    return true;
+  } catch (error) {
+    console.error(`[EMAIL] Error sending ${reminder.type} reminder:`, error);
+    return false;
+  }
+}
+
+function formatEmailAsHtml(textContent) {
+  return `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Payment Reminder</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      line-height: 1.6;
+      color: #333;
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 20px;
+      background-color: #f8f9fa;
+    }
+    .email-container {
+      background-color: white;
+      padding: 30px;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+    .urgent-banner {
+      background-color: #fff3cd;
+      border-left: 4px solid #f39c12;
+      padding: 15px;
+      margin-bottom: 20px;
+      border-radius: 4px;
+    }
+    .final-notice-banner {
+      background-color: #f8d7da;
+      border-left: 4px solid #dc3545;
+      padding: 15px;
+      margin-bottom: 20px;
+      border-radius: 4px;
+    }
+  </style>
+</head>
+<body>
+  <div class="email-container">
+    <pre style="font-family: inherit; white-space: pre-wrap; margin: 0;">${textContent}</pre>
+  </div>
+</body>
+</html>`;
 }
