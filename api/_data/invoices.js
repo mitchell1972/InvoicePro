@@ -111,6 +111,28 @@ const defaultInvoices = [
     status: 'Sent',
     createdAt: '2025-01-20T09:00:00Z',
     updatedAt: '2025-01-20T09:00:00Z'
+  },
+  {
+    id: 'inv_0006',
+    number: '0006',
+    client: {
+      name: 'Lisa Martinez',
+      email: 'lisa@digitalagency.com',
+      company: 'Digital Marketing Agency'
+    },
+    items: [
+      { description: 'Website Redesign', qty: 1, unitPrice: 4500, taxPercent: 20 },
+      { description: 'SEO Setup', qty: 1, unitPrice: 1200, taxPercent: 20 }
+    ],
+    currency: 'GBP',
+    notes: 'Modern responsive design with mobile optimization',
+    terms: 'Net 30',
+    issueDate: '2025-01-25',
+    dueDate: '2025-02-24',
+    totals: { subtotal: 5700, tax: 1140, total: 6840 },
+    status: 'Draft',
+    createdAt: '2025-01-25T10:00:00Z',
+    updatedAt: '2025-01-25T10:00:00Z'
   }
 ];
 

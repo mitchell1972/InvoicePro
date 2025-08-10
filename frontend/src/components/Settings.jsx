@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { formatDate } from '../utils/money';
 
 export default function Settings() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [settings, setSettings] = useState({
     company: {
       name: 'Your Company Ltd',
@@ -52,7 +54,14 @@ export default function Settings() {
   const handleSave = (e) => {
     e.preventDefault();
     localStorage.setItem('invoiceSettings', JSON.stringify(settings));
+    
+    // Show success message
     alert('Settings saved successfully!');
+    
+    // Navigate to dashboard after a short delay
+    setTimeout(() => {
+      navigate('/dashboard');
+    }, 1000);
   };
 
   return (
