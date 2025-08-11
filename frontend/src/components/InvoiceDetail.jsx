@@ -97,14 +97,35 @@ export default function InvoiceDetail() {
       
     } catch (error) {
       console.error('Failed to send invoice:', error);
+      console.error('Error response:', error.response?.data);
+      
+      // Extract error message properly
+      let errorMessage = 'Unknown error occurred';
+      if (error.response?.data) {
+        const errorData = error.response.data;
+        if (typeof errorData.error === 'string') {
+          errorMessage = errorData.error;
+        } else if (typeof errorData.error === 'object' && errorData.error !== null) {
+          // Handle object error (this is causing the [object Object] issue)
+          errorMessage = errorData.error.message || JSON.stringify(errorData.error);
+        } else if (errorData.details) {
+          errorMessage = errorData.details;
+        } else if (errorData.message) {
+          errorMessage = errorData.message;
+        }
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
       
       // More specific error messages
       if (error.response?.status === 403) {
         alert('❌ Email sending failed: Testing mode restriction.\n\nIn development mode, emails can only be sent to the verified owner email address.\n\nTo send to any email address, you need to:\n1. Set up a verified domain in Resend\n2. Update the FROM_EMAIL to use your domain');
       } else if (error.response?.status === 404) {
         alert('❌ Invoice not found. Please refresh and try again.');
+      } else if (error.response?.status === 500 && errorMessage.includes('RESEND_API_KEY')) {
+        alert('❌ Email service not configured.\n\nTo send emails, you need to:\n1. Sign up for a free Resend account at https://resend.com\n2. Get your API key from the Resend dashboard\n3. Add RESEND_API_KEY to your environment variables in Vercel\n\nSee RESEND_SETUP.md for detailed instructions.');
       } else {
-        alert(`❌ Failed to send invoice.\n\nError: ${error.response?.data?.error || error.message}\n\nPlease check your email settings and try again.`);
+        alert(`❌ Failed to send invoice.\n\nError: ${errorMessage}\n\nPlease check your email settings and try again.`);
       }
     }
   };
