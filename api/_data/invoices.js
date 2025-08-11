@@ -188,6 +188,48 @@ const defaultInvoices = [
     status: 'Draft',
     createdAt: '2025-01-29T10:00:00Z',
     updatedAt: '2025-01-29T10:00:00Z'
+  },
+  {
+    id: 'inv_0009',
+    number: '0009',
+    client: {
+      name: 'New Test Client',
+      email: 'test@client.com',
+      company: 'Test Company Ltd'
+    },
+    items: [
+      { description: 'Consulting Services', qty: 5, unitPrice: 500, taxPercent: 20 }
+    ],
+    currency: 'GBP',
+    notes: 'Invoice for consulting work',
+    terms: 'Net 30',
+    issueDate: '2025-01-29',
+    dueDate: '2025-02-28',
+    totals: { subtotal: 2500, tax: 500, total: 3000 },
+    status: 'Draft',
+    createdAt: '2025-01-29T11:00:00Z',
+    updatedAt: '2025-01-29T11:00:00Z'
+  },
+  {
+    id: 'inv_0010',
+    number: '0010',
+    client: {
+      name: 'Additional Client',
+      email: 'additional@client.com',
+      company: 'Additional Services Inc'
+    },
+    items: [
+      { description: 'Development Services', qty: 10, unitPrice: 300, taxPercent: 20 }
+    ],
+    currency: 'GBP',
+    notes: 'Development project invoice',
+    terms: 'Net 30',
+    issueDate: '2025-01-29',
+    dueDate: '2025-02-28',
+    totals: { subtotal: 3000, tax: 600, total: 3600 },
+    status: 'Draft',
+    createdAt: '2025-01-29T11:00:00Z',
+    updatedAt: '2025-01-29T11:00:00Z'
   }
 ];
 
