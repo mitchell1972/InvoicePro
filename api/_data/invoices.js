@@ -11,7 +11,7 @@ const BLOB_KEY = 'invoices-data.json';
 // Cache for the current request to avoid multiple operations
 let invoicesCache = null;
 let cacheTimestamp = 0;
-const CACHE_DURATION = 5000; // 5 seconds cache
+const CACHE_DURATION = 5000; // 5 seconds cache for optimal performance
 
 const defaultInvoices = [
   {
