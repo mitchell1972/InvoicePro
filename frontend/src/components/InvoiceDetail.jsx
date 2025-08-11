@@ -57,14 +57,17 @@ export default function InvoiceDetail() {
 
   const handleSend = async () => {
     try {
-      // Get banking details from localStorage
+      // Get banking details and company details from localStorage
       const settings = localStorage.getItem('invoiceSettings');
-      const bankingDetails = settings ? JSON.parse(settings).banking : null;
+      const settingsData = settings ? JSON.parse(settings) : {};
+      const bankingDetails = settingsData.banking || null;
+      const companyDetails = settingsData.company || { name: 'Your Company' };
       
       const response = await apiClient.post('/invoices/send', { 
         invoiceId: invoice.id, 
         recipientEmail: invoice.client.email,
-        bankingDetails
+        bankingDetails,
+        companyDetails
       });
       
       await apiClient.put(`/invoices/${id}`, { status: 'Sent' });
@@ -77,15 +80,32 @@ export default function InvoiceDetail() {
       });
       
       fetchInvoice();
-      alert('Invoice sent successfully!');
       
-      // Log email content for testing
-      if (response.data.emailContent) {
-        console.log('Email content preview:', response.data.emailContent);
+      if (response.data.success) {
+        alert(`✅ Invoice sent successfully!\n\n📧 Sent to: ${invoice.client.email}\n📅 Sent at: ${new Date(response.data.sentAt).toLocaleString()}\n📋 Email ID: ${response.data.emailId}`);
+      } else {
+        alert('Invoice sent successfully!');
       }
+      
+      // Log email details for debugging
+      console.log('Email sent successfully:', {
+        invoiceId: invoice.id,
+        recipientEmail: invoice.client.email,
+        emailId: response.data.emailId,
+        sentAt: response.data.sentAt
+      });
+      
     } catch (error) {
       console.error('Failed to send invoice:', error);
-      alert('Failed to send invoice. Please try again.');
+      
+      // More specific error messages
+      if (error.response?.status === 403) {
+        alert('❌ Email sending failed: Testing mode restriction.\n\nIn development mode, emails can only be sent to the verified owner email address.\n\nTo send to any email address, you need to:\n1. Set up a verified domain in Resend\n2. Update the FROM_EMAIL to use your domain');
+      } else if (error.response?.status === 404) {
+        alert('❌ Invoice not found. Please refresh and try again.');
+      } else {
+        alert(`❌ Failed to send invoice.\n\nError: ${error.response?.data?.error || error.message}\n\nPlease check your email settings and try again.`);
+      }
     }
   };
 

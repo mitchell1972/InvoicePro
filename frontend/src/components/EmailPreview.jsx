@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { formatCurrency, formatDate } from '../utils/money';
+import apiClient from '../api/client';
 
 export default function EmailPreview({ invoice, onClose, onSend }) {
   const [bankingDetails, setBankingDetails] = useState(null);
@@ -18,83 +19,52 @@ export default function EmailPreview({ invoice, onClose, onSend }) {
     }
   };
 
-  const generateEmailContent = () => {
+  const generateEmailContent = async () => {
     if (!invoice) return;
 
-    const settings = localStorage.getItem('invoiceSettings');
-    const bankingDetails = settings ? JSON.parse(settings).banking : null;
-    const companyDetails = settings ? JSON.parse(settings).company : null;
+    try {
+      const settings = localStorage.getItem('invoiceSettings');
+      const settingsData = settings ? JSON.parse(settings) : {};
+      const bankingDetails = settingsData.banking || null;
+      const companyDetails = settingsData.company || { name: 'Your Company' };
 
-    const paymentLink = `${window.location.origin}/pay/${invoice.id}`;
-    
-    let bankingSection = '';
-    if (bankingDetails && bankingDetails.country) {
-      if (bankingDetails.country === 'GB' && bankingDetails.uk && bankingDetails.uk.bankName) {
-        const uk = bankingDetails.uk;
-        bankingSection = `
-BANK TRANSFER DETAILS (UK):
-━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Bank Name: ${uk.bankName}
-Account Name: ${uk.accountName}
-Sort Code: ${uk.sortCode.replace(/(\d{2})(\d{2})(\d{2})/, '$1-$2-$3')}
-Account Number: ${uk.accountNumber}
+      // Use the API to generate the email content to match exactly what will be sent
+      const response = await apiClient.post('/invoices/email-service', {
+        action: 'preview_invoice',
+        invoiceId: invoice.id,
+        bankingDetails,
+        companyDetails
+      });
 
-Please use invoice #${invoice.number} as the payment reference.
-`;
-      } else if (bankingDetails.country === 'US' && bankingDetails.us && bankingDetails.us.bankName) {
-        const us = bankingDetails.us;
-        bankingSection = `
-BANK TRANSFER DETAILS (US):
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Bank Name: ${us.bankName}
-Account Name: ${us.accountName}
-Routing Number (ABA): ${us.routingNumber}
-Account Number: ${us.accountNumber}
-
-Please use invoice #${invoice.number} as the payment reference.
-`;
-      }
-    }
-
-    const itemsList = invoice.items.map(item => 
-      `${item.description} - ${item.qty} x ${formatCurrency(item.unitPrice)} = ${formatCurrency(item.qty * item.unitPrice * (1 + item.taxPercent / 100))}`
-    ).join('\n');
-
-    const content = `Subject: Invoice #${invoice.number} - ${formatCurrency(invoice.totals.total)}
+      if (response.data.success) {
+        setEmailContent(response.data.emailContent);
+      } else {
+        // Fallback to simple content if API fails
+        const fallbackContent = `Subject: Invoice #${invoice.number} - ${formatCurrency(invoice.totals.total)}
 
 Dear ${invoice.client.name},
 
 Thank you for your business! Please find your invoice details below:
 
-INVOICE DETAILS:
-━━━━━━━━━━━━━━━━
 Invoice Number: #${invoice.number}
 Issue Date: ${formatDate(invoice.issueDate)}
 Due Date: ${formatDate(invoice.dueDate)}
-${companyDetails?.name ? `From: ${companyDetails.name}` : ''}
+Total Amount: ${formatCurrency(invoice.totals.total)}
 
-ITEMS:
-━━━━━━
-${itemsList}
+Payment Link: ${window.location.origin}/pay/${invoice.id}
 
-SUMMARY:
-━━━━━━━━
-Subtotal: ${formatCurrency(invoice.totals.subtotal)}
-Tax: ${formatCurrency(invoice.totals.tax)}
-Total: ${formatCurrency(invoice.totals.total)}
-
-PAYMENT OPTIONS:
-━━━━━━━━━━━━━━━━━
-💳 Pay Online: ${paymentLink}
-${bankingSection}
-${invoice.notes ? `NOTES:\n${invoice.notes}\n\n` : ''}Payment Terms: ${invoice.terms || 'Net 30'}
-
-If you have any questions about this invoice, please don't hesitate to contact us.
+If you have any questions, please contact us.
 
 Best regards,
-${companyDetails?.name || 'Your Invoice Team'}`;
-
-    setEmailContent(content);
+${companyDetails?.name || 'Your Company'}`;
+        
+        setEmailContent(fallbackContent);
+      }
+    } catch (error) {
+      console.error('Failed to generate email preview:', error);
+      // Simple fallback content
+      setEmailContent(`Subject: Invoice #${invoice.number}\n\nDear ${invoice.client.name},\n\nPlease find invoice #${invoice.number} for ${formatCurrency(invoice.totals.total)}.\n\nThank you!`);
+    }
   };
 
   const handleSend = async () => {

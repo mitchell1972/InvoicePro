@@ -62,16 +62,34 @@ export default function InvoiceForm() {
       apiSucceeded = true;
 
       if (action === 'send') {
-        // Get banking details from localStorage
+        // Get banking details and company details from localStorage
         const settings = localStorage.getItem('invoiceSettings');
-        const bankingDetails = settings ? JSON.parse(settings).banking : null;
+        const settingsData = settings ? JSON.parse(settings) : {};
+        const bankingDetails = settingsData.banking || null;
+        const companyDetails = settingsData.company || { name: 'Your Company' };
         
-        await apiClient.post('/invoices/send', { 
-          invoiceId: invoice.id, 
-          recipientEmail: invoice.client.email,
-          bankingDetails
-        });
-        await apiClient.put(`/invoices/${invoice.id}`, { status: 'Sent' });
+        try {
+          const emailResponse = await apiClient.post('/invoices/send', { 
+            invoiceId: invoice.id, 
+            recipientEmail: invoice.client.email,
+            bankingDetails,
+            companyDetails
+          });
+          
+          await apiClient.put(`/invoices/${invoice.id}`, { status: 'Sent' });
+          
+          // Update the invoice status in the stored object
+          invoice.status = 'Sent';
+          
+          // Show success message
+          if (emailResponse.data.success) {
+            console.log(`Email sent successfully to ${invoice.client.email}`);
+          }
+        } catch (emailError) {
+          console.error('Failed to send email, but invoice was saved:', emailError);
+          // Don't fail the entire save process if email fails
+          // Just log the error and continue
+        }
       }
     } catch (error) {
       console.error('Failed to save invoice to API:', error);

@@ -18,10 +18,10 @@ export default async function handler(req, res) {
         return await sendReminderEmail(req, res, params);
       
       case 'preview_invoice':
-        return previewInvoiceEmail(req, res, params);
+        return await previewInvoiceEmail(req, res, params);
       
       case 'preview_reminder':
-        return previewReminderEmail(req, res, params);
+        return await previewReminderEmail(req, res, params);
       
       case 'validate_email':
         return validateEmailAddress(req, res, params);
@@ -165,7 +165,7 @@ async function sendReminderEmail(req, res, params) {
   }
 }
 
-function previewInvoiceEmail(req, res, params) {
+async function previewInvoiceEmail(req, res, params) {
   const { invoiceId, bankingDetails, companyDetails } = params;
 
   if (!invoiceId) {
@@ -194,7 +194,7 @@ function previewInvoiceEmail(req, res, params) {
   });
 }
 
-function previewReminderEmail(req, res, params) {
+async function previewReminderEmail(req, res, params) {
   const { invoiceId, reminderType, daysPastDue = 1, bankingDetails, companyDetails } = params;
 
   if (!invoiceId || !reminderType) {
