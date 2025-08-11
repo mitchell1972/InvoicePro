@@ -1,10 +1,10 @@
 import emailjs from '@emailjs/browser';
 
 // EmailJS Configuration
-// You need to get these from https://www.emailjs.com/
-const EMAILJS_SERVICE_ID = 'service_invoice_app'; // Replace with your service ID
-const EMAILJS_TEMPLATE_ID = 'template_invoice'; // Replace with your template ID  
-const EMAILJS_PUBLIC_KEY = 'your_emailjs_public_key'; // Replace with your public key
+// Configured with invoiceapptrader@gmail.com
+const EMAILJS_SERVICE_ID = 'service_gh4oqg3'; // Gmail service ID
+const EMAILJS_TEMPLATE_ID = 'template_2yro5ul'; // Invoice template ID  
+const EMAILJS_PUBLIC_KEY = '9olw9DixFqoBU12qo'; // Public key
 
 // Initialize EmailJS
 export const initEmailJS = () => {
@@ -193,7 +193,8 @@ This invoice was sent via EmailJS - Professional Invoice System`;
 export const isEmailJSConfigured = () => {
   return EMAILJS_PUBLIC_KEY !== 'your_emailjs_public_key' && 
          EMAILJS_SERVICE_ID !== 'service_invoice_app' &&
-         EMAILJS_TEMPLATE_ID !== 'template_invoice';
+         EMAILJS_TEMPLATE_ID !== 'template_invoice' &&
+         EMAILJS_PUBLIC_KEY.length > 10; // Valid key check
 };
 
 // Preview email content
