@@ -113,13 +113,8 @@ export default function InvoiceForm() {
       saveFallbackInvoice(invoice);
     }
     
-    // Navigate to the created/updated invoice detail page, or dashboard if edit
-    if (isEdit) {
-      navigate('/dashboard');
-    } else {
-      // For new invoices, go to the detail page to verify it was created
-      navigate(`/invoices/${invoice.id}`);
-    }
+    // Navigate to dashboard to show the saved invoice in the list
+    navigate('/dashboard');
     
     setLoading(false);
   };
