@@ -1,9 +1,14 @@
 import { promises as fs } from 'fs';
 import { join } from 'path';
 
-// File-based storage for serverless persistence
-// Use /tmp directory in serverless environment, fallback to local data directory
-const STORAGE_FILE = process.env.VERCEL ? join('/tmp', 'invoices.json') : join(process.cwd(), 'data', 'invoices.json');
+// Storage configuration
+// For serverless: use in-memory storage with defaults always available
+// For local development: use file-based storage
+const STORAGE_FILE = join(process.cwd(), 'data', 'invoices.json');
+const IS_SERVERLESS = !!process.env.VERCEL;
+
+// Runtime storage for serverless environment (resets on cold start)
+let runtimeInvoices = [];
 
 const defaultInvoices = [
   {
@@ -137,45 +142,73 @@ const defaultInvoices = [
     status: 'Draft',
     createdAt: '2025-01-25T10:00:00Z',
     updatedAt: '2025-01-25T10:00:00Z'
+  },
+  {
+    id: 'inv_0007',
+    number: '0007',
+    client: {
+      name: 'David Chen',
+      email: 'david@techsolutions.com',
+      company: 'Tech Solutions Inc'
+    },
+    items: [
+      { description: 'Mobile App Development', qty: 1, unitPrice: 7500, taxPercent: 20 },
+      { description: 'Testing & QA', qty: 1, unitPrice: 1500, taxPercent: 20 }
+    ],
+    currency: 'GBP',
+    notes: 'Mobile app for iOS and Android platforms',
+    terms: 'Net 30',
+    issueDate: '2025-01-28',
+    dueDate: '2025-02-27',
+    totals: { subtotal: 9000, tax: 1800, total: 10800 },
+    status: 'Draft',
+    createdAt: '2025-01-28T10:00:00Z',
+    updatedAt: '2025-01-28T10:00:00Z'
   }
 ];
 
-// File-based storage functions
-async function loadInvoicesFromFile() {
-  try {
-    // Ensure directory exists (only for local development)
-    if (!process.env.VERCEL) {
+// Storage functions
+async function loadInvoicesFromStorage() {
+  if (IS_SERVERLESS) {
+    // In serverless, always start with default invoices + any in memory
+    console.log('[STORAGE] Serverless: Loading default invoices + in-memory invoices');
+    return [...defaultInvoices, ...(runtimeInvoices || [])];
+  } else {
+    // Local development: use file-based storage
+    try {
       await fs.mkdir(join(process.cwd(), 'data'), { recursive: true });
+      const data = await fs.readFile(STORAGE_FILE, 'utf8');
+      return JSON.parse(data);
+    } catch (error) {
+      console.log('[STORAGE] Loading default invoices (file not found or invalid)');
+      return [...defaultInvoices];
     }
-    
-    const data = await fs.readFile(STORAGE_FILE, 'utf8');
-    return JSON.parse(data);
-  } catch (error) {
-    // If file doesn't exist or is invalid, return default invoices
-    console.log('[STORAGE] Loading default invoices (file not found or invalid)');
-    return [...defaultInvoices];
   }
 }
 
-async function saveInvoicesToFile(invoices) {
-  try {
-    // Ensure directory exists (only for local development)
-    if (!process.env.VERCEL) {
+async function saveInvoicesToStorage(invoices) {
+  if (IS_SERVERLESS) {
+    // In serverless, separate default invoices from runtime-created ones
+    const runtimeOnly = invoices.filter(inv => !defaultInvoices.find(def => def.id === inv.id));
+    runtimeInvoices = runtimeOnly;
+    console.log(`[STORAGE] Serverless: Saved ${runtimeOnly.length} runtime invoices to memory`);
+  } else {
+    // Local development: save to file
+    try {
       await fs.mkdir(join(process.cwd(), 'data'), { recursive: true });
+      await fs.writeFile(STORAGE_FILE, JSON.stringify(invoices, null, 2));
+      console.log(`[STORAGE] Saved ${invoices.length} invoices to file: ${STORAGE_FILE}`);
+    } catch (error) {
+      console.error('[STORAGE] Failed to save invoices:', error);
+      throw error;
     }
-    
-    await fs.writeFile(STORAGE_FILE, JSON.stringify(invoices, null, 2));
-    console.log(`[STORAGE] Saved ${invoices.length} invoices to file: ${STORAGE_FILE}`);
-  } catch (error) {
-    console.error('[STORAGE] Failed to save invoices:', error);
-    throw error;
   }
 }
 
-// Cache for the current request to avoid multiple file reads
+// Cache for the current request to avoid multiple operations
 let invoicesCache = null;
 let cacheTimestamp = 0;
-const CACHE_DURATION = 30000; // 30 seconds
+const CACHE_DURATION = IS_SERVERLESS ? 10000 : 30000; // Shorter cache in serverless
 
 export async function getInvoices() {
   const now = Date.now();
@@ -185,9 +218,9 @@ export async function getInvoices() {
     return invoicesCache;
   }
   
-  // Load from file
+  // Load from storage
   try {
-    invoicesCache = await loadInvoicesFromFile();
+    invoicesCache = await loadInvoicesFromStorage();
     cacheTimestamp = now;
     console.log(`[STORAGE] Loaded ${invoicesCache.length} invoices from storage`);
     return invoicesCache;
@@ -201,7 +234,7 @@ export async function getInvoices() {
 
 export async function setInvoices(newInvoices) {
   try {
-    await saveInvoicesToFile(newInvoices);
+    await saveInvoicesToStorage(newInvoices);
     
     // Update cache
     invoicesCache = newInvoices;
