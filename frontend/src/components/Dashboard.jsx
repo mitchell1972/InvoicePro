@@ -6,7 +6,7 @@ import InvoiceTable from './InvoiceTable';
 import SubscriptionStatus from './SubscriptionStatus';
 import BulkActions from './BulkActions';
 import StorageWarning from './StorageWarning';
-import { getFallbackInvoices, initializeFallbackStorage } from '../utils/invoiceStorage';
+import { getFallbackInvoices, getFallbackInvoiceById, saveFallbackInvoice, deleteFallbackInvoice, initializeFallbackStorage } from '../utils/invoiceStorage';
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -28,7 +28,29 @@ export default function Dashboard() {
       if (searchQuery) params.q = searchQuery;
       if (filterStatus) params.status = filterStatus;
       const { data } = await apiClient.get('/invoices', { params });
-      setInvoices(data);
+      
+      // Merge API data with fallback data to ensure all invoices are shown
+      const fallbackInvoices = getFallbackInvoices();
+      const apiInvoiceIds = new Set(data.map(inv => inv.id));
+      
+      // Add any fallback invoices that aren't in the API response
+      const missingFromApi = fallbackInvoices.filter(inv => !apiInvoiceIds.has(inv.id));
+      const combinedInvoices = [...data, ...missingFromApi];
+      
+      // Apply filters to combined data
+      let filteredInvoices = combinedInvoices;
+      if (searchQuery) {
+        filteredInvoices = filteredInvoices.filter(inv =>
+          inv.client.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          inv.client.company.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          inv.number.includes(searchQuery)
+        );
+      }
+      if (filterStatus) {
+        filteredInvoices = filteredInvoices.filter(inv => inv.status === filterStatus);
+      }
+      
+      setInvoices(filteredInvoices);
       setSelectedInvoices([]); // Clear selections when refreshing
     } catch (error) {
       console.error('Failed to fetch invoices from API:', error);
@@ -59,6 +81,17 @@ export default function Dashboard() {
   const handleStatusChange = async (id, newStatus) => {
     try {
       await apiClient.put(`/invoices/${id}`, { status: newStatus });
+      
+      // Also update fallback storage to keep in sync
+      const fallbackInvoice = getFallbackInvoiceById(id);
+      if (fallbackInvoice) {
+        saveFallbackInvoice({ 
+          ...fallbackInvoice, 
+          status: newStatus, 
+          updatedAt: new Date().toISOString() 
+        });
+      }
+      
       fetchInvoices();
     } catch (error) {
       console.error('Failed to update invoice:', error);
@@ -69,6 +102,10 @@ export default function Dashboard() {
     if (confirm('Are you sure you want to delete this invoice?')) {
       try {
         await apiClient.delete(`/invoices/${id}`);
+        
+        // Also delete from fallback storage to keep in sync
+        deleteFallbackInvoice(id);
+        
         fetchInvoices();
       } catch (error) {
         console.error('Failed to delete invoice:', error);

@@ -68,6 +68,14 @@ export default function InvoiceDetail() {
       });
       
       await apiClient.put(`/invoices/${id}`, { status: 'Sent' });
+      
+      // Also update fallback storage to keep in sync
+      saveFallbackInvoice({ 
+        ...invoice, 
+        status: 'Sent', 
+        updatedAt: new Date().toISOString() 
+      });
+      
       fetchInvoice();
       alert('Invoice sent successfully!');
       
@@ -88,6 +96,14 @@ export default function InvoiceDetail() {
   const handleMarkPaid = async () => {
     try {
       await apiClient.put(`/invoices/${id}`, { status: 'Paid' });
+      
+      // Also update fallback storage to keep in sync
+      saveFallbackInvoice({ 
+        ...invoice, 
+        status: 'Paid', 
+        updatedAt: new Date().toISOString() 
+      });
+      
       fetchInvoice();
     } catch (error) {
       console.error('Failed to update invoice:', error);
