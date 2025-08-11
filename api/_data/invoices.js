@@ -262,7 +262,9 @@ async function loadInvoicesFromStorage() {
       try {
         const blob = await put(BLOB_KEY, JSON.stringify(defaultInvoices), {
           access: 'public',
-          contentType: 'application/json'
+          contentType: 'application/json',
+          addRandomSuffix: false,
+          allowOverwrite: true  // Allow overwriting if it somehow exists
         });
         console.log('[STORAGE] Initialized Blob storage with default invoices');
         return [...defaultInvoices];
@@ -304,7 +306,9 @@ async function saveInvoicesToStorage(invoices) {
     try {
       const blob = await put(BLOB_KEY, JSON.stringify(invoices), {
         access: 'public',
-        contentType: 'application/json'
+        contentType: 'application/json',
+        addRandomSuffix: false,
+        allowOverwrite: true  // CRITICAL: Allow overwriting existing blob
       });
       console.log(`[STORAGE] Saved ${invoices.length} invoices to Blob storage`);
       console.log('[STORAGE] Blob URL:', blob.url);
