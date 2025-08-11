@@ -304,16 +304,30 @@ async function saveInvoicesToStorage(invoices) {
   if (USE_BLOB) {
     // Use Vercel Blob storage
     try {
+      console.log(`[STORAGE] Attempting to save ${invoices.length} invoices to Blob...`);
+      console.log('[STORAGE] Invoice IDs to save:', invoices.map(i => i.id).join(', '));
+      
       const blob = await put(BLOB_KEY, JSON.stringify(invoices), {
         access: 'public',
         contentType: 'application/json',
         addRandomSuffix: false,
         allowOverwrite: true  // CRITICAL: Allow overwriting existing blob
       });
-      console.log(`[STORAGE] Saved ${invoices.length} invoices to Blob storage`);
+      
+      console.log(`[STORAGE] Blob save completed!`);
       console.log('[STORAGE] Blob URL:', blob.url);
+      console.log('[STORAGE] Blob downloadUrl:', blob.downloadUrl);
+      
+      // Verify the save by immediately reading it back
+      const verifyResponse = await fetch(blob.downloadUrl || blob.url);
+      const verifyData = await verifyResponse.json();
+      console.log(`[STORAGE] Verification: Blob contains ${verifyData.length} invoices`);
+      
+      return true;
     } catch (error) {
-      console.error('[STORAGE] Failed to save to Blob storage:', error);
+      console.error('[STORAGE] CRITICAL: Failed to save to Blob storage:', error);
+      console.error('[STORAGE] Error type:', error.constructor.name);
+      console.error('[STORAGE] Error message:', error.message);
       throw error;
     }
   } else if (IS_SERVERLESS) {
