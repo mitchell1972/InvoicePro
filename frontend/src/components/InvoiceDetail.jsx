@@ -66,8 +66,14 @@ export default function InvoiceDetail() {
       const bankingDetails = settingsData.banking || null;
       const companyDetails = settingsData.company || { name: 'Your Company' };
       
-      // Try to send via API
-      const response = await apiClient.post('/invoices/send', { 
+      // Try Gmail first, then fallback to Resend
+      // You can set useGmail to false to always use Resend
+      const useGmail = true;
+      const endpoint = useGmail ? '/invoices/gmail-send' : '/invoices/send';
+      
+      console.log(`Attempting to send via ${useGmail ? 'Gmail SMTP' : 'Resend API'}...`);
+      
+      const response = await apiClient.post(endpoint, { 
         invoiceId: invoice.id, 
         recipientEmail: invoice.client.email,
         bankingDetails,
