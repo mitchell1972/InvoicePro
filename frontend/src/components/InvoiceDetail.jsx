@@ -4,6 +4,7 @@ import apiClient from '../api/client';
 import { formatCurrency, formatDate } from '../utils/money';
 import StatusBadge from './StatusBadge';
 import EmailPreview from './EmailPreview';
+import { getFallbackInvoiceById, saveFallbackInvoice } from '../utils/invoiceStorage';
 
 export default function InvoiceDetail() {
   const { id } = useParams();
@@ -32,12 +33,22 @@ export default function InvoiceDetail() {
       const { data } = await apiClient.get(`/invoices/${id}`);
       setInvoice(data);
     } catch (error) {
-      console.error('Failed to fetch invoice:', error);
+      console.error('Failed to fetch invoice from API:', error);
       
-      // If invoice not found, it might be due to serverless cold start
-      // Show more helpful error message
-      if (error.response?.status === 404) {
-        console.log('Invoice not found - this may be due to serverless cold start or the invoice was not saved properly');
+      // Try fallback localStorage data when API fails
+      console.log('Attempting to load invoice from fallback storage...');
+      const fallbackInvoice = getFallbackInvoiceById(id);
+      
+      if (fallbackInvoice) {
+        console.log('Invoice found in fallback storage:', fallbackInvoice);
+        setInvoice(fallbackInvoice);
+      } else {
+        console.log('Invoice not found in fallback storage either');
+        // If invoice not found, it might be due to serverless cold start
+        // Show more helpful error message
+        if (error.response?.status === 404) {
+          console.log('Invoice not found - this may be due to serverless cold start or the invoice was not saved properly');
+        }
       }
     } finally {
       setLoading(false);

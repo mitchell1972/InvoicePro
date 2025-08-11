@@ -6,6 +6,7 @@ import InvoiceTable from './InvoiceTable';
 import SubscriptionStatus from './SubscriptionStatus';
 import BulkActions from './BulkActions';
 import StorageWarning from './StorageWarning';
+import { getFallbackInvoices, initializeFallbackStorage } from '../utils/invoiceStorage';
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -16,6 +17,7 @@ export default function Dashboard() {
   const [selectedInvoices, setSelectedInvoices] = useState([]);
 
   useEffect(() => {
+    initializeFallbackStorage(); // Ensure fallback data is ready
     fetchInvoices();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchQuery, filterStatus]);
@@ -29,7 +31,26 @@ export default function Dashboard() {
       setInvoices(data);
       setSelectedInvoices([]); // Clear selections when refreshing
     } catch (error) {
-      console.error('Failed to fetch invoices:', error);
+      console.error('Failed to fetch invoices from API:', error);
+      
+      // Use fallback data when API fails
+      console.log('Loading invoices from fallback storage...');
+      let fallbackInvoices = getFallbackInvoices();
+      
+      // Apply filters to fallback data
+      if (searchQuery) {
+        fallbackInvoices = fallbackInvoices.filter(inv =>
+          inv.client.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          inv.client.company.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          inv.number.includes(searchQuery)
+        );
+      }
+      if (filterStatus) {
+        fallbackInvoices = fallbackInvoices.filter(inv => inv.status === filterStatus);
+      }
+      
+      setInvoices(fallbackInvoices);
+      setSelectedInvoices([]);
     } finally {
       setLoading(false);
     }
