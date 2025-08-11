@@ -4,6 +4,7 @@ import apiClient from '../api/client';
 import { calculateInvoiceTotals, formatCurrency } from '../utils/money';
 import { validateInvoiceForm } from '../utils/validators';
 import { saveFallbackInvoice, getFallbackInvoiceById } from '../utils/invoiceStorage';
+import { sendInvoiceEmailJS, initEmailJS, isEmailJSConfigured } from '../utils/emailjs-service';
 
 export default function InvoiceForm() {
   const navigate = useNavigate();
@@ -26,6 +27,10 @@ export default function InvoiceForm() {
   useEffect(() => {
     if (isEdit) {
       fetchInvoice();
+    }
+    // Initialize EmailJS
+    if (isEmailJSConfigured()) {
+      initEmailJS();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);

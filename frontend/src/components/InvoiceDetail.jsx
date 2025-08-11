@@ -5,6 +5,7 @@ import { formatCurrency, formatDate } from '../utils/money';
 import StatusBadge from './StatusBadge';
 import EmailPreview from './EmailPreview';
 import { getFallbackInvoiceById, saveFallbackInvoice } from '../utils/invoiceStorage';
+import { sendInvoiceEmailJS, initEmailJS, isEmailJSConfigured } from '../utils/emailjs-service';
 
 export default function InvoiceDetail() {
   const { id } = useParams();
@@ -17,6 +18,10 @@ export default function InvoiceDetail() {
   useEffect(() => {
     fetchInvoice();
     loadBankingDetails();
+    // Initialize EmailJS
+    if (isEmailJSConfigured()) {
+      initEmailJS();
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
@@ -66,19 +71,38 @@ export default function InvoiceDetail() {
       const bankingDetails = settingsData.banking || null;
       const companyDetails = settingsData.company || { name: 'Your Company' };
       
-      // Try Gmail first, then fallback to Resend
-      // You can set useGmail to false to always use Resend
-      const useGmail = true;
-      const endpoint = useGmail ? '/invoices/gmail-send' : '/invoices/send';
+      // Choose email service: EmailJS (browser-based), Gmail SMTP, or Resend
+      const useEmailJS = isEmailJSConfigured();
+      const useGmail = !useEmailJS && true; // Use Gmail if EmailJS not configured
       
-      console.log(`Attempting to send via ${useGmail ? 'Gmail SMTP' : 'Resend API'}...`);
+      let response;
       
-      const response = await apiClient.post(endpoint, { 
-        invoiceId: invoice.id, 
-        recipientEmail: invoice.client.email,
-        bankingDetails,
-        companyDetails
-      });
+      if (useEmailJS) {
+        console.log('Attempting to send via EmailJS (browser-based)...');
+        
+        // Send directly via EmailJS (browser-based, no server required)
+        response = await sendInvoiceEmailJS(
+          invoice,
+          invoice.client.email,
+          companyDetails,
+          bankingDetails
+        );
+        
+        // Wrap response to match server format
+        response = { data: response };
+        
+      } else {
+        // Use server-based email (Gmail or Resend)
+        const endpoint = useGmail ? '/invoices/gmail-send' : '/invoices/send';
+        console.log(`Attempting to send via ${useGmail ? 'Gmail SMTP' : 'Resend API'}...`);
+        
+        response = await apiClient.post(endpoint, { 
+          invoiceId: invoice.id, 
+          recipientEmail: invoice.client.email,
+          bankingDetails,
+          companyDetails
+        });
+      }
       
       // Update status via API
       await apiClient.put(`/invoices/${id}`, { status: 'Sent' });
@@ -163,11 +187,13 @@ export default function InvoiceDetail() {
         errorMessage = error.message;
       }
       
-      // More specific error messages
-      if (error.response?.status === 403) {
-        alert('❌ Email sending failed: Testing mode restriction.\n\nIn development mode, emails can only be sent to the verified owner email address.\n\nTo send to any email address, you need to:\n1. Set up a verified domain in Resend\n2. Update the FROM_EMAIL to use your domain');
+      // More specific error messages based on email service
+      if (errorMessage.includes('EmailJS')) {
+        alert('❌ EmailJS Configuration Required\n\nTo send emails to any address, you need to:\n\n1. Sign up for a free EmailJS account at https://www.emailjs.com\n2. Create an email service (Gmail, Outlook, etc.)\n3. Create an email template\n4. Get your Service ID, Template ID, and Public Key\n5. Update the configuration in emailjs-service.js\n\nSee EMAILJS_SETUP.md for detailed instructions.\n\nEmailJS allows sending to any email address without server-side setup!');
+      } else if (error.response?.status === 403) {
+        alert('❌ Email sending failed: Testing mode restriction.\n\nIn development mode, emails can only be sent to the verified owner email address.\n\nTo send to any email address, you need to:\n1. Set up a verified domain in Resend\n2. Update the FROM_EMAIL to use your domain\n\nOr use EmailJS for unrestricted email sending!');
       } else if (error.response?.status === 500 && errorMessage.includes('RESEND_API_KEY')) {
-        alert('❌ Email service not configured.\n\nTo send emails, you need to:\n1. Sign up for a free Resend account at https://resend.com\n2. Get your API key from the Resend dashboard\n3. Add RESEND_API_KEY to your environment variables in Vercel\n\nSee RESEND_SETUP.md for detailed instructions.');
+        alert('❌ Email service not configured.\n\nTo send emails, you need to:\n1. Sign up for a free Resend account at https://resend.com\n2. Get your API key from the Resend dashboard\n3. Add RESEND_API_KEY to your environment variables in Vercel\n\nAlternatively, use EmailJS for browser-based email sending without server configuration!');
       } else {
         alert(`❌ Failed to send invoice.\n\nError: ${errorMessage}\n\nPlease check your email settings and try again.`);
       }
