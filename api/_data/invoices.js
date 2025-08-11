@@ -2,7 +2,8 @@ import { promises as fs } from 'fs';
 import { join } from 'path';
 
 // File-based storage for serverless persistence
-const STORAGE_FILE = join(process.cwd(), 'data', 'invoices.json');
+// Use /tmp directory in serverless environment, fallback to local data directory
+const STORAGE_FILE = process.env.VERCEL ? join('/tmp', 'invoices.json') : join(process.cwd(), 'data', 'invoices.json');
 
 const defaultInvoices = [
   {
@@ -142,8 +143,10 @@ const defaultInvoices = [
 // File-based storage functions
 async function loadInvoicesFromFile() {
   try {
-    // Ensure data directory exists
-    await fs.mkdir(join(process.cwd(), 'data'), { recursive: true });
+    // Ensure directory exists (only for local development)
+    if (!process.env.VERCEL) {
+      await fs.mkdir(join(process.cwd(), 'data'), { recursive: true });
+    }
     
     const data = await fs.readFile(STORAGE_FILE, 'utf8');
     return JSON.parse(data);
@@ -156,11 +159,13 @@ async function loadInvoicesFromFile() {
 
 async function saveInvoicesToFile(invoices) {
   try {
-    // Ensure data directory exists
-    await fs.mkdir(join(process.cwd(), 'data'), { recursive: true });
+    // Ensure directory exists (only for local development)
+    if (!process.env.VERCEL) {
+      await fs.mkdir(join(process.cwd(), 'data'), { recursive: true });
+    }
     
     await fs.writeFile(STORAGE_FILE, JSON.stringify(invoices, null, 2));
-    console.log(`[STORAGE] Saved ${invoices.length} invoices to file`);
+    console.log(`[STORAGE] Saved ${invoices.length} invoices to file: ${STORAGE_FILE}`);
   } catch (error) {
     console.error('[STORAGE] Failed to save invoices:', error);
     throw error;
