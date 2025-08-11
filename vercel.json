@@ -4,7 +4,8 @@
   "framework": null,
   "functions": {
     "api/**/*.js": {
-      "maxDuration": 10
+      "maxDuration": 10,
+      "runtime": "nodejs20.x"
     }
   },
   "crons": [
@@ -14,7 +15,7 @@
     }
   ],
   "rewrites": [
-    { "source": "/api/(.*)", "destination": "/api/$1" },
+    { "source": "/api/:path*", "destination": "/api/:path*" },
     { "source": "/(.*)", "destination": "/$1" }
   ]
 }
