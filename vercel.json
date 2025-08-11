@@ -4,8 +4,7 @@
   "framework": null,
   "functions": {
     "api/**/*.js": {
-      "maxDuration": 10,
-      "runtime": "nodejs20.x"
+      "maxDuration": 10
     }
   },
   "crons": [
