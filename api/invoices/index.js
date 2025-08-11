@@ -1,9 +1,9 @@
 import { getInvoices, setInvoices, calculateTotals } from '../_data/invoices.js';
 
-export default function handler(req, res) {
+export default async function handler(req, res) {
   if (req.method === 'GET') {
     const { q, status, sort = 'createdAt', order = 'desc' } = req.query || {};
-    const invoices = [...getInvoices()];
+    const invoices = [...(await getInvoices())];
 
     let filtered = invoices;
 
@@ -35,7 +35,7 @@ export default function handler(req, res) {
       return res.status(400).json({ error: 'Client and items are required' });
     }
 
-    const invoices = getInvoices();
+    const invoices = await getInvoices();
     const totals = calculateTotals(items);
     
     // Generate unique invoice number by finding the highest existing number + 1
@@ -72,7 +72,7 @@ export default function handler(req, res) {
     console.log(`[DEBUG] Creating new invoice with ID: "${uniqueId}" and number: "${number}"`);
     
     const updatedInvoices = [...invoices, newInvoice];
-    setInvoices(updatedInvoices);
+    await setInvoices(updatedInvoices);
     
     console.log(`[DEBUG] Invoice created successfully. Total invoices: ${updatedInvoices.length}`);
     console.log(`[DEBUG] All invoice IDs:`, updatedInvoices.map(inv => inv.id));

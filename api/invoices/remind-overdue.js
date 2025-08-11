@@ -15,7 +15,7 @@ export default async function handler(req, res) {
   }
 
   try {
-    const invoices = getInvoices();
+    const invoices = await getInvoices();
     const now = new Date();
     const reminders = [];
 
@@ -98,7 +98,7 @@ export default async function handler(req, res) {
     });
 
     // Save updated invoices
-    setInvoices(updatedInvoices);
+    await setInvoices(updatedInvoices);
 
     return res.status(200).json({
       success: true,

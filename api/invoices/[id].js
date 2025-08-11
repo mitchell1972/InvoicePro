@@ -1,8 +1,8 @@
 import { getInvoices, setInvoices, calculateTotals } from '../_data/invoices.js';
 
-export default function handler(req, res) {
+export default async function handler(req, res) {
   const { id } = req.query || {};
-  const invoices = getInvoices();
+  const invoices = await getInvoices();
   
   // Debug logging
   console.log(`[DEBUG] Looking for invoice ID: "${id}"`);
@@ -38,14 +38,14 @@ export default function handler(req, res) {
 
     const next = [...invoices];
     next[invoiceIndex] = updated;
-    setInvoices(next);
+    await setInvoices(next);
     return res.status(200).json(updated);
   }
 
   if (req.method === 'DELETE') {
     const next = invoices.filter((inv) => inv.id !== id);
     const deleted = invoices[invoiceIndex];
-    setInvoices(next);
+    await setInvoices(next);
     return res.status(200).json({ success: true, deleted });
   }
 

@@ -47,7 +47,7 @@ async function sendInvoiceEmail(req, res, params) {
     });
   }
 
-  const invoices = getInvoices();
+  const invoices = await getInvoices();
   const invoice = invoices.find(inv => inv.id === invoiceId);
   
   if (!invoice) {
@@ -105,7 +105,7 @@ async function sendReminderEmail(req, res, params) {
     });
   }
 
-  const invoices = getInvoices();
+  const invoices = await getInvoices();
   const invoice = invoices.find(inv => inv.id === invoiceId);
   
   if (!invoice) {
@@ -172,7 +172,7 @@ function previewInvoiceEmail(req, res, params) {
     return res.status(400).json({ error: 'Invoice ID is required' });
   }
 
-  const invoices = getInvoices();
+  const invoices = await getInvoices();
   const invoice = invoices.find(inv => inv.id === invoiceId);
   
   if (!invoice) {
@@ -203,7 +203,7 @@ function previewReminderEmail(req, res, params) {
     });
   }
 
-  const invoices = getInvoices();
+  const invoices = await getInvoices();
   const invoice = invoices.find(inv => inv.id === invoiceId);
   
   if (!invoice) {

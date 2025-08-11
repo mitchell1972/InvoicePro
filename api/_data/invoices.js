@@ -1,5 +1,8 @@
-// Shared in-memory storage across functions within the same serverless instance
-// Note: This resets on cold starts. For demo purposes only.
+import { promises as fs } from 'fs';
+import { join } from 'path';
+
+// File-based storage for serverless persistence
+const STORAGE_FILE = join(process.cwd(), 'data', 'invoices.json');
 
 const defaultInvoices = [
   {
@@ -136,16 +139,77 @@ const defaultInvoices = [
   }
 ];
 
-if (!globalThis.__invoices) {
-  globalThis.__invoices = [...defaultInvoices];
+// File-based storage functions
+async function loadInvoicesFromFile() {
+  try {
+    // Ensure data directory exists
+    await fs.mkdir(join(process.cwd(), 'data'), { recursive: true });
+    
+    const data = await fs.readFile(STORAGE_FILE, 'utf8');
+    return JSON.parse(data);
+  } catch (error) {
+    // If file doesn't exist or is invalid, return default invoices
+    console.log('[STORAGE] Loading default invoices (file not found or invalid)');
+    return [...defaultInvoices];
+  }
 }
 
-export function getInvoices() {
-  return globalThis.__invoices;
+async function saveInvoicesToFile(invoices) {
+  try {
+    // Ensure data directory exists
+    await fs.mkdir(join(process.cwd(), 'data'), { recursive: true });
+    
+    await fs.writeFile(STORAGE_FILE, JSON.stringify(invoices, null, 2));
+    console.log(`[STORAGE] Saved ${invoices.length} invoices to file`);
+  } catch (error) {
+    console.error('[STORAGE] Failed to save invoices:', error);
+    throw error;
+  }
 }
 
-export function setInvoices(newInvoices) {
-  globalThis.__invoices = newInvoices;
+// Cache for the current request to avoid multiple file reads
+let invoicesCache = null;
+let cacheTimestamp = 0;
+const CACHE_DURATION = 30000; // 30 seconds
+
+export async function getInvoices() {
+  const now = Date.now();
+  
+  // Return cached data if it's fresh
+  if (invoicesCache && (now - cacheTimestamp) < CACHE_DURATION) {
+    return invoicesCache;
+  }
+  
+  // Load from file
+  try {
+    invoicesCache = await loadInvoicesFromFile();
+    cacheTimestamp = now;
+    console.log(`[STORAGE] Loaded ${invoicesCache.length} invoices from storage`);
+    return invoicesCache;
+  } catch (error) {
+    console.error('[STORAGE] Failed to load invoices, using defaults:', error);
+    invoicesCache = [...defaultInvoices];
+    cacheTimestamp = now;
+    return invoicesCache;
+  }
+}
+
+export async function setInvoices(newInvoices) {
+  try {
+    await saveInvoicesToFile(newInvoices);
+    
+    // Update cache
+    invoicesCache = newInvoices;
+    cacheTimestamp = Date.now();
+    
+    console.log(`[STORAGE] Updated storage with ${newInvoices.length} invoices`);
+  } catch (error) {
+    console.error('[STORAGE] Failed to save invoices:', error);
+    // Still update cache for current session
+    invoicesCache = newInvoices;
+    cacheTimestamp = Date.now();
+    throw error;
+  }
 }
 
 export function calculateTotals(items) {
