@@ -330,25 +330,38 @@ async function saveInvoicesToStorage(invoices) {
   }
 }
 
-export async function getInvoices() {
+// Force clear the cache (useful before critical operations)
+export function clearInvoiceCache() {
+  console.log('[STORAGE] Clearing invoice cache');
+  invoicesCache = null;
+  cacheTimestamp = 0;
+}
+
+export async function getInvoices(forceRefresh = false) {
   const now = Date.now();
+  
+  // Clear cache if forced refresh requested
+  if (forceRefresh) {
+    clearInvoiceCache();
+  }
   
   // Return cached data if it's fresh
   if (invoicesCache && (now - cacheTimestamp) < CACHE_DURATION) {
-    return invoicesCache;
+    console.log('[STORAGE] Returning cached invoices');
+    return [...invoicesCache]; // Return a copy to prevent mutations
   }
   
   // Load from storage
   try {
     invoicesCache = await loadInvoicesFromStorage();
     cacheTimestamp = now;
-    console.log(`[STORAGE] Retrieved ${invoicesCache.length} invoices`);
-    return invoicesCache;
+    console.log(`[STORAGE] Retrieved ${invoicesCache.length} invoices from storage`);
+    return [...invoicesCache]; // Return a copy
   } catch (error) {
     console.error('[STORAGE] Failed to load invoices, using defaults:', error);
     invoicesCache = [...defaultInvoices];
     cacheTimestamp = now;
-    return invoicesCache;
+    return [...invoicesCache]; // Return a copy
   }
 }
 
@@ -361,13 +374,25 @@ export async function setInvoices(newInvoices) {
     cacheTimestamp = Date.now();
     
     console.log(`[STORAGE] Successfully updated ${newInvoices.length} invoices`);
+    return true;
   } catch (error) {
     console.error('[STORAGE] Failed to save invoices:', error);
+    console.error('[STORAGE] Error details:', error.message, error.stack);
+    
+    // Log more details about the environment
+    console.error('[STORAGE] Environment check:', {
+      IS_SERVERLESS,
+      USE_BLOB,
+      HAS_TOKEN: !!process.env.BLOB_READ_WRITE_TOKEN,
+      TOKEN_LENGTH: process.env.BLOB_READ_WRITE_TOKEN?.length || 0
+    });
+    
     // Still update cache for current session
     invoicesCache = newInvoices;
     cacheTimestamp = Date.now();
-    // Don't throw the error to prevent breaking the app
-    // The data is at least cached for this session
+    
+    // Throw the error so the API knows the save failed
+    throw new Error(`Storage save failed: ${error.message}`);
   }
 }
 

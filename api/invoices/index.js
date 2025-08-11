@@ -54,8 +54,9 @@ export default async function handler(req, res) {
       }
 
       console.log('[DEBUG] Loading existing invoices...');
-      const invoices = await getInvoices();
-      console.log(`[DEBUG] Loaded ${invoices.length} existing invoices`);
+      // Force a fresh load from storage to avoid cache issues
+      const invoices = await getInvoices(true); // Force refresh to get latest data
+      console.log(`[DEBUG] Loaded ${invoices.length} existing invoices from storage`);
 
       const totals = calculateTotals(items);
       console.log('[DEBUG] Calculated totals:', totals);
@@ -96,12 +97,20 @@ export default async function handler(req, res) {
       const updatedInvoices = [...invoices, newInvoice];
       
       console.log('[DEBUG] Saving invoices to storage...');
-      await setInvoices(updatedInvoices);
-      
-      console.log(`[DEBUG] Invoice created successfully. Total invoices: ${updatedInvoices.length}`);
-      console.log(`[DEBUG] New invoice:`, JSON.stringify(newInvoice, null, 2));
-      
-      return res.status(201).json(newInvoice);
+      try {
+        await setInvoices(updatedInvoices);
+        console.log(`[DEBUG] Invoice created successfully. Total invoices: ${updatedInvoices.length}`);
+        console.log(`[DEBUG] New invoice:`, JSON.stringify(newInvoice, null, 2));
+        
+        return res.status(201).json(newInvoice);
+      } catch (saveError) {
+        console.error('[DEBUG] Failed to save invoice to storage:', saveError);
+        return res.status(500).json({
+          error: 'Failed to save invoice',
+          details: saveError.message,
+          invoice: newInvoice // Return the invoice data even if save failed
+        });
+      }
       
     } catch (error) {
       console.error('[ERROR] Failed to create invoice:', error);
