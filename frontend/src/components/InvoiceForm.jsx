@@ -77,7 +77,19 @@ export default function InvoiceForm() {
       }
     } catch (error) {
       console.error('Failed to save invoice:', error);
-      setErrors({ general: 'Failed to save invoice. Please try again.' });
+      console.error('Error details:', error.response?.data);
+      
+      let errorMessage = 'Failed to save invoice. Please try again.';
+      
+      if (error.response?.data?.details) {
+        errorMessage = `Failed to save invoice: ${error.response.data.details}`;
+      } else if (error.response?.data?.error) {
+        errorMessage = `Failed to save invoice: ${error.response.data.error}`;
+      } else if (error.message) {
+        errorMessage = `Failed to save invoice: ${error.message}`;
+      }
+      
+      setErrors({ general: errorMessage });
     } finally {
       setLoading(false);
     }
