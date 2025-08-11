@@ -167,6 +167,27 @@ const defaultInvoices = [
     status: 'Draft',
     createdAt: '2025-01-28T10:00:00Z',
     updatedAt: '2025-01-28T10:00:00Z'
+  },
+  {
+    id: 'inv_0008',
+    number: '0008',
+    client: {
+      name: 'Sample Client',
+      email: 'client@example.com',
+      company: 'Example Company'
+    },
+    items: [
+      { description: 'Professional Services', qty: 1, unitPrice: 2000, taxPercent: 20 }
+    ],
+    currency: 'GBP',
+    notes: 'Thank you for your business',
+    terms: 'Net 30',
+    issueDate: '2025-01-29',
+    dueDate: '2025-02-28',
+    totals: { subtotal: 2000, tax: 400, total: 2400 },
+    status: 'Draft',
+    createdAt: '2025-01-29T10:00:00Z',
+    updatedAt: '2025-01-29T10:00:00Z'
   }
 ];
 

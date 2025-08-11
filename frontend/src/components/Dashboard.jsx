@@ -5,6 +5,7 @@ import SummaryCards from './SummaryCards';
 import InvoiceTable from './InvoiceTable';
 import SubscriptionStatus from './SubscriptionStatus';
 import BulkActions from './BulkActions';
+import StorageWarning from './StorageWarning';
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -64,6 +65,7 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-6">
+      <StorageWarning />
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
         <button
