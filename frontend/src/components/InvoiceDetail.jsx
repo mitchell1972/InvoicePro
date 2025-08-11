@@ -104,11 +104,12 @@ export default function InvoiceDetail() {
       console.error('Failed to send invoice:', error);
       console.error('Error response:', error.response?.data);
       
-      // Check if this is an API availability issue
+      // Check if this is an API availability issue or invoice not on server
       const isApiDown = error.code === 'ERR_NETWORK' || 
                         error.response?.status === 404 && error.config?.url?.includes('/api/');
+      const isInvoiceNotOnServer = error.response?.status === 404;
       
-      if (isApiDown) {
+      if (isApiDown || isInvoiceNotOnServer) {
         // Update local storage to mark as "sent" even though email didn't actually go out
         saveFallbackInvoice({ 
           ...invoice, 
@@ -118,14 +119,18 @@ export default function InvoiceDetail() {
         
         // Provide options to the user
         const result = window.confirm(
-          '⚠️ Email Service Unavailable\n\n' +
-          'The email service is currently not accessible. This is likely because:\n' +
-          '• The API functions are not deployed on Vercel\n' +
-          '• Or the email service is not configured\n\n' +
-          'Would you like to:\n' +
-          '• Click OK to mark as "Sent" (for testing)\n' +
-          '• Click Cancel to keep as "Draft"\n\n' +
-          'Note: No actual email will be sent.'
+          '⚠️ Invoice Exists Locally Only\n\n' +
+          'This invoice is saved in your browser but not on the server.\n' +
+          'The email service cannot send it because:\n' +
+          '• The API is currently unavailable\n' +
+          '• The invoice needs to exist on the server to send emails\n\n' +
+          'For testing purposes, would you like to:\n' +
+          '✓ Click OK to mark as "Sent" (no email will be sent)\n' +
+          '✗ Click Cancel to keep as "Draft"\n\n' +
+          'To enable actual email sending:\n' +
+          '1. Add RESEND_API_KEY to Vercel environment variables\n' +
+          '2. Ensure API functions are deployed\n' +
+          '3. Redeploy the application'
         );
         
         if (result) {
@@ -155,8 +160,6 @@ export default function InvoiceDetail() {
       // More specific error messages
       if (error.response?.status === 403) {
         alert('❌ Email sending failed: Testing mode restriction.\n\nIn development mode, emails can only be sent to the verified owner email address.\n\nTo send to any email address, you need to:\n1. Set up a verified domain in Resend\n2. Update the FROM_EMAIL to use your domain');
-      } else if (error.response?.status === 404 && !isApiDown) {
-        alert('❌ Invoice not found on server.\n\nThis invoice only exists locally. To send emails, the invoice needs to be saved to the server first.');
       } else if (error.response?.status === 500 && errorMessage.includes('RESEND_API_KEY')) {
         alert('❌ Email service not configured.\n\nTo send emails, you need to:\n1. Sign up for a free Resend account at https://resend.com\n2. Get your API key from the Resend dashboard\n3. Add RESEND_API_KEY to your environment variables in Vercel\n\nSee RESEND_SETUP.md for detailed instructions.');
       } else {
