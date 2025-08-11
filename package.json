@@ -8,8 +8,7 @@
     "vercel-build": "cd frontend && npm install && npm run build"
   },
   "dependencies": {
+    "@vercel/blob": "^1.1.1",
     "stripe": "^14.0.0"
   }
 }
-
-

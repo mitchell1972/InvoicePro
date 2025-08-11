@@ -1,13 +1,17 @@
 import { promises as fs } from 'fs';
 import { join } from 'path';
+import { put, head, del, list } from '@vercel/blob';
 
 // Storage configuration
 const STORAGE_FILE = join(process.cwd(), 'data', 'invoices.json');
 const IS_SERVERLESS = !!process.env.VERCEL;
+const USE_BLOB = IS_SERVERLESS && !!process.env.BLOB_READ_WRITE_TOKEN;
+const BLOB_KEY = 'invoices-data.json';
 
-// Serverless storage: in-memory store that persists during function lifetime
-// and gets initialized with defaults + any uploaded invoices
-let serverlessInvoiceStore = null;
+// Cache for the current request to avoid multiple operations
+let invoicesCache = null;
+let cacheTimestamp = 0;
+const CACHE_DURATION = 5000; // 5 seconds cache
 
 const defaultInvoices = [
   {
@@ -166,16 +170,49 @@ const defaultInvoices = [
   }
 ];
 
-// Simple storage functions
+// Storage functions with Vercel Blob support
 async function loadInvoicesFromStorage() {
-  if (IS_SERVERLESS) {
-    // Serverless: use in-memory store, initialize with defaults if empty
-    if (!serverlessInvoiceStore) {
-      console.log('[STORAGE] Initializing serverless store with defaults');
-      serverlessInvoiceStore = [...defaultInvoices];
+  if (USE_BLOB) {
+    // Use Vercel Blob storage
+    try {
+      console.log('[STORAGE] Loading from Vercel Blob storage...');
+      
+      // First check if the blob exists
+      const blobHead = await head(BLOB_KEY).catch(() => null);
+      
+      if (blobHead) {
+        // Blob exists, fetch its content
+        const response = await fetch(blobHead.url);
+        const invoices = await response.json();
+        console.log(`[STORAGE] Loaded ${invoices.length} invoices from Blob storage`);
+        return invoices;
+      } else {
+        // Blob doesn't exist yet
+        console.log('[STORAGE] No existing blob data, initializing with defaults');
+        throw new Error('Blob not found');
+      }
+    } catch (error) {
+      console.log('[STORAGE] No existing blob data or error loading, will initialize with defaults');
+      console.log('[STORAGE] Error details:', error.message);
+      
+      // Initialize blob storage with defaults
+      try {
+        const blob = await put(BLOB_KEY, JSON.stringify(defaultInvoices), {
+          access: 'public',
+          contentType: 'application/json'
+        });
+        console.log('[STORAGE] Initialized Blob storage with default invoices');
+        return [...defaultInvoices];
+      } catch (putError) {
+        console.error('[STORAGE] Failed to initialize Blob storage:', putError);
+        return [...defaultInvoices];
+      }
     }
-    console.log(`[STORAGE] Loaded ${serverlessInvoiceStore.length} invoices from serverless store`);
-    return [...serverlessInvoiceStore]; // Return copy
+  } else if (IS_SERVERLESS) {
+    // Serverless without Blob storage configured
+    console.log('[STORAGE] Blob storage not configured. Using in-memory defaults.');
+    console.log('[STORAGE] To enable persistence, set BLOB_READ_WRITE_TOKEN in Vercel dashboard.');
+    return [...defaultInvoices];
   } else {
     // Local development: use file-based storage
     try {
@@ -186,18 +223,37 @@ async function loadInvoicesFromStorage() {
       return invoices;
     } catch (error) {
       console.log('[STORAGE] Loading default invoices (file not found or invalid)');
+      // Save defaults to file for next time
+      try {
+        await fs.mkdir(join(process.cwd(), 'data'), { recursive: true });
+        await fs.writeFile(STORAGE_FILE, JSON.stringify(defaultInvoices, null, 2));
+      } catch (writeError) {
+        console.error('[STORAGE] Could not save defaults to file:', writeError);
+      }
       return [...defaultInvoices];
     }
   }
 }
 
 async function saveInvoicesToStorage(invoices) {
-  if (IS_SERVERLESS) {
-    // Serverless: update in-memory store
-    serverlessInvoiceStore = [...invoices]; // Store copy
-    console.log(`[STORAGE] Saved ${invoices.length} invoices to serverless store (session lifetime)`);
-    // Note: Data persists only during the serverless function's lifetime
-    // For demo purposes, this is acceptable. For production, consider database.
+  if (USE_BLOB) {
+    // Use Vercel Blob storage
+    try {
+      const blob = await put(BLOB_KEY, JSON.stringify(invoices), {
+        access: 'public',
+        contentType: 'application/json'
+      });
+      console.log(`[STORAGE] Saved ${invoices.length} invoices to Blob storage`);
+      console.log('[STORAGE] Blob URL:', blob.url);
+    } catch (error) {
+      console.error('[STORAGE] Failed to save to Blob storage:', error);
+      throw error;
+    }
+  } else if (IS_SERVERLESS) {
+    // Serverless without Blob storage
+    console.log('[STORAGE] Warning: Running on Vercel without Blob storage.');
+    console.log('[STORAGE] Data will be lost on function restart.');
+    console.log('[STORAGE] To enable persistence, configure BLOB_READ_WRITE_TOKEN.');
   } else {
     // Local development: save to file
     try {
@@ -211,11 +267,6 @@ async function saveInvoicesToStorage(invoices) {
   }
 }
 
-// Cache for the current request to avoid multiple operations
-let invoicesCache = null;
-let cacheTimestamp = 0;
-const CACHE_DURATION = IS_SERVERLESS ? 5000 : 30000; // Short cache in serverless for responsiveness
-
 export async function getInvoices() {
   const now = Date.now();
   
@@ -228,7 +279,7 @@ export async function getInvoices() {
   try {
     invoicesCache = await loadInvoicesFromStorage();
     cacheTimestamp = now;
-    console.log(`[STORAGE] Loaded ${invoicesCache.length} invoices from storage`);
+    console.log(`[STORAGE] Retrieved ${invoicesCache.length} invoices`);
     return invoicesCache;
   } catch (error) {
     console.error('[STORAGE] Failed to load invoices, using defaults:', error);
@@ -246,13 +297,14 @@ export async function setInvoices(newInvoices) {
     invoicesCache = newInvoices;
     cacheTimestamp = Date.now();
     
-    console.log(`[STORAGE] Updated storage with ${newInvoices.length} invoices`);
+    console.log(`[STORAGE] Successfully updated ${newInvoices.length} invoices`);
   } catch (error) {
     console.error('[STORAGE] Failed to save invoices:', error);
     // Still update cache for current session
     invoicesCache = newInvoices;
     cacheTimestamp = Date.now();
-    throw error;
+    // Don't throw the error to prevent breaking the app
+    // The data is at least cached for this session
   }
 }
 
@@ -264,5 +316,3 @@ export function calculateTotals(items) {
   );
   return { subtotal, tax, total: subtotal + tax };
 }
-
-
