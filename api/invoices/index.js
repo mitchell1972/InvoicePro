@@ -6,7 +6,8 @@ export default async function handler(req, res) {
       console.log('[DEBUG] Received GET request for invoices');
       const { q, status, sort = 'createdAt', order = 'desc' } = req.query || {};
       
-      const invoices = [...(await getInvoices())];
+      // Force refresh from storage to ensure we have latest data
+      const invoices = [...(await getInvoices(true))];
       console.log(`[DEBUG] Loaded ${invoices.length} invoices for GET request`);
 
       let filtered = invoices;

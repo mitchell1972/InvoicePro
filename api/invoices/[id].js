@@ -2,7 +2,8 @@ import { getInvoices, setInvoices, calculateTotals } from '../_data/invoices.js'
 
 export default async function handler(req, res) {
   const { id } = req.query || {};
-  const invoices = await getInvoices();
+  // Force refresh from storage for GET requests to ensure we have latest data
+  const invoices = await getInvoices(req.method === 'GET');
   
   // Debug logging
   console.log(`[DEBUG] Looking for invoice ID: "${id}"`);
