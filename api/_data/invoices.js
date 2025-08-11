@@ -5,10 +5,9 @@ import { join } from 'path';
 const STORAGE_FILE = join(process.cwd(), 'data', 'invoices.json');
 const IS_SERVERLESS = !!process.env.VERCEL;
 
-// Simple persistent storage for serverless using JSONBin.io (free service)
-const JSONBIN_API_KEY = process.env.JSONBIN_API_KEY;
-const JSONBIN_BIN_ID = process.env.JSONBIN_BIN_ID;
-const USE_EXTERNAL_STORAGE = IS_SERVERLESS && JSONBIN_API_KEY && JSONBIN_BIN_ID;
+// Serverless storage: in-memory store that persists during function lifetime
+// and gets initialized with defaults + any uploaded invoices
+let serverlessInvoiceStore = null;
 
 const defaultInvoices = [
   {
@@ -167,69 +166,24 @@ const defaultInvoices = [
   }
 ];
 
-// External storage functions for JSONBin.io
-async function loadFromExternalStorage() {
-  try {
-    const response = await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}/latest`, {
-      headers: {
-        'X-Master-Key': JSONBIN_API_KEY,
-        'X-Access-Key': JSONBIN_API_KEY
-      }
-    });
-    
-    if (!response.ok) {
-      throw new Error(`External storage read failed: ${response.status}`);
-    }
-    
-    const data = await response.json();
-    return data.record.invoices || [...defaultInvoices];
-  } catch (error) {
-    console.warn('[STORAGE] External storage failed, using defaults:', error.message);
-    return [...defaultInvoices];
-  }
-}
-
-async function saveToExternalStorage(invoices) {
-  try {
-    const response = await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-Master-Key': JSONBIN_API_KEY,
-        'X-Access-Key': JSONBIN_API_KEY
-      },
-      body: JSON.stringify({
-        invoices: invoices,
-        lastUpdated: new Date().toISOString()
-      })
-    });
-
-    if (!response.ok) {
-      throw new Error(`External storage write failed: ${response.status}`);
-    }
-
-    console.log(`[STORAGE] Saved ${invoices.length} invoices to external storage`);
-  } catch (error) {
-    console.error('[STORAGE] External storage save failed:', error.message);
-    throw error;
-  }
-}
-
-// Storage functions
+// Simple storage functions
 async function loadInvoicesFromStorage() {
-  if (USE_EXTERNAL_STORAGE) {
-    console.log('[STORAGE] Loading from external storage...');
-    return await loadFromExternalStorage();
-  } else if (IS_SERVERLESS) {
-    // Fallback: serverless without external storage - only defaults
-    console.log('[STORAGE] Serverless fallback: using defaults only');
-    return [...defaultInvoices];
+  if (IS_SERVERLESS) {
+    // Serverless: use in-memory store, initialize with defaults if empty
+    if (!serverlessInvoiceStore) {
+      console.log('[STORAGE] Initializing serverless store with defaults');
+      serverlessInvoiceStore = [...defaultInvoices];
+    }
+    console.log(`[STORAGE] Loaded ${serverlessInvoiceStore.length} invoices from serverless store`);
+    return [...serverlessInvoiceStore]; // Return copy
   } else {
     // Local development: use file-based storage
     try {
       await fs.mkdir(join(process.cwd(), 'data'), { recursive: true });
       const data = await fs.readFile(STORAGE_FILE, 'utf8');
-      return JSON.parse(data);
+      const invoices = JSON.parse(data);
+      console.log(`[STORAGE] Loaded ${invoices.length} invoices from file`);
+      return invoices;
     } catch (error) {
       console.log('[STORAGE] Loading default invoices (file not found or invalid)');
       return [...defaultInvoices];
@@ -238,12 +192,12 @@ async function loadInvoicesFromStorage() {
 }
 
 async function saveInvoicesToStorage(invoices) {
-  if (USE_EXTERNAL_STORAGE) {
-    await saveToExternalStorage(invoices);
-  } else if (IS_SERVERLESS) {
-    // Fallback: serverless without external storage - can't persist new invoices
-    console.warn('[STORAGE] Serverless without external storage: new invoices will not persist');
-    throw new Error('External storage not configured - invoices cannot be saved in production');
+  if (IS_SERVERLESS) {
+    // Serverless: update in-memory store
+    serverlessInvoiceStore = [...invoices]; // Store copy
+    console.log(`[STORAGE] Saved ${invoices.length} invoices to serverless store (session lifetime)`);
+    // Note: Data persists only during the serverless function's lifetime
+    // For demo purposes, this is acceptable. For production, consider database.
   } else {
     // Local development: save to file
     try {
@@ -260,7 +214,7 @@ async function saveInvoicesToStorage(invoices) {
 // Cache for the current request to avoid multiple operations
 let invoicesCache = null;
 let cacheTimestamp = 0;
-const CACHE_DURATION = USE_EXTERNAL_STORAGE ? 5000 : (IS_SERVERLESS ? 10000 : 30000); // Very short cache for external storage
+const CACHE_DURATION = IS_SERVERLESS ? 5000 : 30000; // Short cache in serverless for responsiveness
 
 export async function getInvoices() {
   const now = Date.now();
