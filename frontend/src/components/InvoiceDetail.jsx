@@ -189,8 +189,12 @@ export default function InvoiceDetail() {
       }
       
       // More specific error messages based on email service
-      if (errorMessage.includes('EmailJS')) {
-        alert('❌ EmailJS Configuration Required\n\nTo send emails to any address, you need to:\n\n1. Sign up for a free EmailJS account at https://www.emailjs.com\n2. Create an email service (Gmail, Outlook, etc.)\n3. Create an email template\n4. Get your Service ID, Template ID, and Public Key\n5. Update the configuration in emailjs-service.js\n\nSee EMAILJS_SETUP.md for detailed instructions.\n\nEmailJS allows sending to any email address without server-side setup!');
+      // Only show the EmailJS Configuration alert when it is truly a config error
+      if (
+        errorMessage.includes('EmailJS configuration error') ||
+        errorMessage.includes('EmailJS not configured')
+      ) {
+        alert('❌ EmailJS Configuration Required\n\nWe detected that EmailJS is selected but not fully configured.\n\nSteps:\n1. Ensure Service ID, Template ID, and Public Key are set in emailjs-service.js\n2. Make sure your EmailJS template accepts variables like to_email, invoice_number, total, email_content_html\n3. Redeploy and hard refresh (Cmd/Ctrl+Shift+R)');
       } else if (error.response?.status === 403) {
         alert('❌ Email sending failed: Testing mode restriction.\n\nIn development mode, emails can only be sent to the verified owner email address.\n\nTo send to any email address, you need to:\n1. Set up a verified domain in Resend\n2. Update the FROM_EMAIL to use your domain\n\nOr use EmailJS for unrestricted email sending!');
       } else if (error.response?.status === 500 && errorMessage.includes('RESEND_API_KEY')) {
