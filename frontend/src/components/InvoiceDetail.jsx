@@ -70,6 +70,27 @@ export default function InvoiceDetail() {
     const settingsData = settings ? JSON.parse(settings) : {};
     const bankingDetails = settingsData.banking || null;
     const companyDetails = settingsData.company || { name: 'Your Company' };
+
+    // Check if banking details are configured before sending
+    const areBankingDetailsSet = bankingDetails && bankingDetails.country &&
+      (
+        (bankingDetails.country === 'GB' && bankingDetails.uk?.bankName?.trim()) ||
+        (bankingDetails.country === 'US' && bankingDetails.us?.bankName?.trim())
+      );
+
+    if (!areBankingDetailsSet) {
+      const proceed = window.confirm(
+        '⚠️ Banking Details Missing\n\n' +
+        'Your banking details are not configured. Invoices sent without them will not include bank transfer payment options.\n\n' +
+        '• Click OK to send the invoice anyway.\n' +
+        '• Click Cancel to go to Settings to add them.'
+      );
+      if (!proceed) {
+        navigate('/settings');
+        return;
+      }
+    }
+
     // Server-only mode: always use API so invoices are saved in Blob before send
     const useEmailJS = false;
     const useGmail = false; // false => use '/invoices/send' (Resend)

@@ -54,7 +54,17 @@ async function sendInvoiceEmail(req, res, params) {
     return res.status(404).json({ error: 'Invoice not found' });
   }
 
-  const emailContent = generateInvoiceEmailContent(invoice, bankingDetails, companyDetails);
+  // Create a temporary invoice object for email generation
+  // This ensures the recipient's email is correctly displayed in the email body
+  const emailInvoice = {
+    ...invoice,
+    client: {
+      ...invoice.client,
+      email: recipientEmail // Override with the actual recipient's email
+    }
+  };
+
+  const emailContent = generateInvoiceEmailContent(emailInvoice, bankingDetails, companyDetails);
   const emailSubject = `Invoice #${invoice.number} - ${formatCurrency(invoice.totals.total)}`;
   const fromEmail = process.env.FROM_EMAIL || 'invoices@yourdomain.com';
   const companyName = companyDetails?.name || 'Your Company';
@@ -118,7 +128,16 @@ async function sendReminderEmail(req, res, params) {
     sentAt: new Date().toISOString()
   };
 
-  const emailContent = generateReminderEmailContent(invoice, reminder, bankingDetails, companyDetails);
+  // Create a temporary invoice object for email generation
+  const emailInvoice = {
+    ...invoice,
+    client: {
+      ...invoice.client,
+      email: recipientEmail
+    }
+  };
+
+  const emailContent = generateReminderEmailContent(emailInvoice, reminder, bankingDetails, companyDetails);
   const urgencyLevels = {
     first: 'Payment Reminder',
     second: '2nd Payment Reminder',
