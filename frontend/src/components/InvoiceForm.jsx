@@ -23,8 +23,16 @@ export default function InvoiceForm() {
 
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
+  const [bankingDetails, setBankingDetails] = useState(null);
 
   useEffect(() => {
+    // Load banking details from settings
+    const settings = localStorage.getItem('invoiceSettings');
+    if (settings) {
+      const parsed = JSON.parse(settings);
+      setBankingDetails(parsed.banking);
+    }
+
     if (isEdit) {
       fetchInvoice();
     }
@@ -294,6 +302,7 @@ export default function InvoiceForm() {
         </div>
 
         <div className="bg-white rounded-lg shadow p-6">
+          <h2 className="text-lg font-semibold mb-4">Payment Details</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Issue Date</label>
@@ -351,6 +360,72 @@ export default function InvoiceForm() {
               placeholder="Additional notes or payment instructions..."
             />
           </div>
+
+          {bankingDetails && (
+            <div className="mt-6 pt-6 border-t border-gray-200">
+              <h3 className="text-sm font-medium text-gray-700 mb-3">Bank Transfer Details (Read-Only)</h3>
+              <p className="text-sm text-gray-500 mb-3">
+                These details are managed in{' '}
+                <a href="/settings" className="text-primary-600 hover:underline">Settings</a> and will be included in the invoice email.
+              </p>
+              
+              {bankingDetails.country === 'GB' && bankingDetails.uk?.bankName && (
+                <div className="bg-gray-50 rounded-lg p-4">
+                  <div className="grid grid-cols-2 gap-3 text-sm">
+                    <div>
+                      <span className="text-gray-600">Bank Name:</span>
+                      <p className="font-medium text-gray-900">{bankingDetails.uk.bankName}</p>
+                    </div>
+                    <div>
+                      <span className="text-gray-600">Account Name:</span>
+                      <p className="font-medium text-gray-900">{bankingDetails.uk.accountName}</p>
+                    </div>
+                    <div>
+                      <span className="text-gray-600">Sort Code:</span>
+                      <p className="font-medium text-gray-900 font-mono">
+                        {bankingDetails.uk.sortCode.replace(/(\d{2})(\d{2})(\d{2})/, '$1-$2-$3')}
+                      </p>
+                    </div>
+                    <div>
+                      <span className="text-gray-600">Account Number:</span>
+                      <p className="font-medium text-gray-900 font-mono">{bankingDetails.uk.accountNumber}</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {bankingDetails.country === 'US' && bankingDetails.us?.bankName && (
+                <div className="bg-gray-50 rounded-lg p-4">
+                  <div className="grid grid-cols-2 gap-3 text-sm">
+                    <div>
+                      <span className="text-gray-600">Bank Name:</span>
+                      <p className="font-medium text-gray-900">{bankingDetails.us.bankName}</p>
+                    </div>
+                    <div>
+                      <span className="text-gray-600">Account Name:</span>
+                      <p className="font-medium text-gray-900">{bankingDetails.us.accountName}</p>
+                    </div>
+                    <div>
+                      <span className="text-gray-600">Routing Number (ABA):</span>
+                      <p className="font-medium text-gray-900 font-mono">{bankingDetails.us.routingNumber}</p>
+                    </div>
+                    <div>
+                      <span className="text-gray-600">Account Number:</span>
+                      <p className="font-medium text-gray-900 font-mono">{bankingDetails.us.accountNumber}</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {(!bankingDetails.country || (bankingDetails.country === 'GB' && !bankingDetails.uk?.bankName) || (bankingDetails.country === 'US' && !bankingDetails.us?.bankName)) && (
+                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                  <p className="text-sm text-yellow-800">
+                    No banking details configured.
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         <div className="flex gap-4">
