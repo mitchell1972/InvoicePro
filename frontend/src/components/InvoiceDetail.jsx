@@ -64,17 +64,16 @@ export default function InvoiceDetail() {
     // First check if we're dealing with a locally-stored invoice
     const isLocalInvoice = !invoice.id.startsWith('inv_000') && invoice.id.includes('_');
     
+    // Prepare settings and decide which email service BEFORE the try/catch so
+    // that these flags are available in the catch block as well
+    const settings = localStorage.getItem('invoiceSettings');
+    const settingsData = settings ? JSON.parse(settings) : {};
+    const bankingDetails = settingsData.banking || null;
+    const companyDetails = settingsData.company || { name: 'Your Company' };
+    const useEmailJS = isEmailJSConfigured();
+    const useGmail = !useEmailJS && true; // Use Gmail if EmailJS not configured
+
     try {
-      // Get banking details and company details from localStorage
-      const settings = localStorage.getItem('invoiceSettings');
-      const settingsData = settings ? JSON.parse(settings) : {};
-      const bankingDetails = settingsData.banking || null;
-      const companyDetails = settingsData.company || { name: 'Your Company' };
-      
-      // Choose email service: EmailJS (browser-based), Gmail SMTP, or Resend
-      // Re-enabling EmailJS after cache clear
-      const useEmailJS = isEmailJSConfigured();
-      const useGmail = !useEmailJS && true; // Use Gmail if EmailJS not configured
       
       let response;
       
@@ -173,7 +172,7 @@ export default function InvoiceDetail() {
       
       // If EmailJS was used and the browser blocked the request (CORS/AdBlock),
       // automatically fall back to server-based Gmail SMTP
-      const attemptedEmailJs = error.message?.includes('EmailJS');
+      const attemptedEmailJs = (error.message || '').includes('EmailJS');
       const networkBlocked = /Failed to fetch|NetworkError|TypeError/i.test(error.message || '');
       if (useEmailJS && (attemptedEmailJs || networkBlocked)) {
         try {
@@ -227,6 +226,11 @@ export default function InvoiceDetail() {
         alert('❌ Email service not configured.\n\nTo send emails, you need to:\n1. Sign up for a free Resend account at https://resend.com\n2. Get your API key from the Resend dashboard\n3. Add RESEND_API_KEY to your environment variables in Vercel\n\nAlternatively, use EmailJS for browser-based email sending without server configuration!');
       } else {
         alert(`❌ Failed to send invoice.\n\nError: ${errorMessage}\n\nPlease check your email settings and try again.`);
+      }
+      
+      // Final guard to ensure user feedback in any unexpected case
+      if (!errorMessage) {
+        alert('❌ Failed to send invoice due to an unexpected error. Please try again.');
       }
     }
   };
