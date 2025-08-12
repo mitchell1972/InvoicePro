@@ -1,5 +1,6 @@
 // EmailJS Service - Browser-based email sending (no server required!)
 // Configured and ready to use!
+// Cache bust: v2.0 - ${new Date().toISOString()}
 
 // ================================================
 // CONFIGURATION - UPDATE THESE WITH YOUR VALUES

@@ -72,9 +72,9 @@ export default function InvoiceDetail() {
       const companyDetails = settingsData.company || { name: 'Your Company' };
       
       // Choose email service: EmailJS (browser-based), Gmail SMTP, or Resend
-      // TEMPORARY: Disable EmailJS while deployment completes
-      const useEmailJS = false; // isEmailJSConfigured();
-      const useGmail = true; // Always use Gmail/Resend for now
+      // Re-enabling EmailJS after cache clear
+      const useEmailJS = isEmailJSConfigured();
+      const useGmail = !useEmailJS && true; // Use Gmail if EmailJS not configured
       
       let response;
       
