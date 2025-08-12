@@ -1,4 +1,5 @@
 // EmailJS Service - Browser-based email sending (no server required!)
+// Configured and ready to use!
 
 // ================================================
 // CONFIGURATION - UPDATE THESE WITH YOUR VALUES
