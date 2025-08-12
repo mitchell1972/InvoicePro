@@ -4,9 +4,9 @@
 // CONFIGURATION - UPDATE THESE WITH YOUR VALUES
 // ================================================
 const EMAILJS_CONFIG = {
-  SERVICE_ID: 'YOUR_SERVICE_ID',     // e.g., 'service_abc123'
-  TEMPLATE_ID: 'YOUR_TEMPLATE_ID',   // e.g., 'template_xyz789'  
-  PUBLIC_KEY: 'YOUR_PUBLIC_KEY'      // e.g., 'AbCdEfGhIjKlMnOpQr'
+  SERVICE_ID: 'service_gh4oqg3',     // Your Gmail service
+  TEMPLATE_ID: 'template_2yro5ul',   // Your invoice template  
+  PUBLIC_KEY: '9olw9DixFqoBU12qo'    // Your public API key
 };
 
 // To get these values:
