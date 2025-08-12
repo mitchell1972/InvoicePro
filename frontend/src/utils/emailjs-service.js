@@ -21,10 +21,26 @@ let emailjsInitialized = false;
  * Check if EmailJS is configured
  */
 export function isEmailJSConfigured() {
-  // Check if the values have been updated from defaults
-  return EMAILJS_CONFIG.SERVICE_ID !== 'YOUR_SERVICE_ID' &&
+  // Debug logging
+  console.log('[EmailJS] Configuration check:', {
+    SERVICE_ID: EMAILJS_CONFIG.SERVICE_ID,
+    TEMPLATE_ID: EMAILJS_CONFIG.TEMPLATE_ID,
+    PUBLIC_KEY: EMAILJS_CONFIG.PUBLIC_KEY,
+    hasValidServiceId: EMAILJS_CONFIG.SERVICE_ID !== 'YOUR_SERVICE_ID' && EMAILJS_CONFIG.SERVICE_ID.length > 5,
+    hasValidTemplateId: EMAILJS_CONFIG.TEMPLATE_ID !== 'YOUR_TEMPLATE_ID' && EMAILJS_CONFIG.TEMPLATE_ID.length > 5,
+    hasValidPublicKey: EMAILJS_CONFIG.PUBLIC_KEY !== 'YOUR_PUBLIC_KEY' && EMAILJS_CONFIG.PUBLIC_KEY.length > 10
+  });
+  
+  // Check if the values have been updated from defaults and are valid
+  const isConfigured = EMAILJS_CONFIG.SERVICE_ID !== 'YOUR_SERVICE_ID' &&
          EMAILJS_CONFIG.TEMPLATE_ID !== 'YOUR_TEMPLATE_ID' &&
-         EMAILJS_CONFIG.PUBLIC_KEY !== 'YOUR_PUBLIC_KEY';
+         EMAILJS_CONFIG.PUBLIC_KEY !== 'YOUR_PUBLIC_KEY' &&
+         EMAILJS_CONFIG.SERVICE_ID.length > 5 &&
+         EMAILJS_CONFIG.TEMPLATE_ID.length > 5 &&
+         EMAILJS_CONFIG.PUBLIC_KEY.length > 10;
+         
+  console.log('[EmailJS] Is configured:', isConfigured);
+  return isConfigured;
 }
 
 /**
