@@ -134,6 +134,7 @@ export default function InvoiceForm() {
           ...existing,
           ...formData,
           totals: totals,
+          status: action === 'send' ? 'Sent' : 'Draft',
           updatedAt: new Date().toISOString()
         };
       }
@@ -367,5 +368,3 @@ export default function InvoiceForm() {
     </div>
   );
 }
-
-
