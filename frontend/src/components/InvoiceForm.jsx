@@ -73,27 +73,38 @@ export default function InvoiceForm() {
         const bankingDetails = settingsData.banking || null;
         const companyDetails = settingsData.company || { name: 'Your Company' };
         
+        let emailSent = false;
         try {
-          const emailResponse = await apiClient.post('/invoices/send', { 
-            invoiceId: invoice.id, 
+          const emailResponse = await apiClient.post('/invoices/send', {
+            invoiceId: invoice.id,
             recipientEmail: invoice.client.email,
             bankingDetails,
             companyDetails
           });
-          
-          await apiClient.put(`/invoices/${invoice.id}`, { status: 'Sent' });
-          
-          // Update the invoice status in the stored object
-          invoice.status = 'Sent';
-          
-          // Show success message
-          if (emailResponse.data.success) {
-            console.log(`Email sent successfully to ${invoice.client.email}`);
-          }
+          emailSent = !!emailResponse.data?.success;
         } catch (emailError) {
-          console.error('Failed to send email, but invoice was saved:', emailError);
-          // Don't fail the entire save process if email fails
-          // Just log the error and continue
+          console.error('Primary email send failed, attempting Gmail fallback:', emailError);
+          try {
+            const gmailRes = await apiClient.post('/invoices/gmail-send', {
+              invoiceId: invoice.id,
+              recipientEmail: invoice.client.email,
+              bankingDetails,
+              companyDetails
+            });
+            emailSent = !!gmailRes.data?.success;
+          } catch (gmailErr) {
+            console.error('Gmail fallback failed:', gmailErr);
+          }
+        }
+
+        if (emailSent) {
+          await apiClient.put(`/invoices/${invoice.id}`, { status: 'Sent' });
+          invoice.status = 'Sent';
+          alert(`✅ Invoice emailed to ${invoice.client.email}`);
+        } else {
+          // Keep as Draft if email didn't send
+          invoice.status = 'Draft';
+          alert('❌ Email failed to send. The invoice was saved as Draft. You can try again later.');
         }
       }
     } catch (error) {
@@ -111,7 +122,8 @@ export default function InvoiceForm() {
           id: `inv_${invoiceNumber}`,
           number: invoiceNumber,
           totals: totals,
-          status: action === 'send' ? 'Sent' : 'Draft',
+          // If sending failed due to API down, keep as Draft
+          status: 'Draft',
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString()
         };
