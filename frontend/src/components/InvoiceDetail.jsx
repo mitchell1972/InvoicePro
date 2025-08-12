@@ -70,12 +70,34 @@ export default function InvoiceDetail() {
     const settingsData = settings ? JSON.parse(settings) : {};
     const bankingDetails = settingsData.banking || null;
     const companyDetails = settingsData.company || { name: 'Your Company' };
-    const useEmailJS = isEmailJSConfigured();
-    const useGmail = !useEmailJS && true; // Use Gmail if EmailJS not configured
+    // Server-only mode: always use API so invoices are saved in Blob before send
+    const useEmailJS = false;
+    const useGmail = false; // false => use '/invoices/send' (Resend)
 
     try {
       
       let response;
+      let serverInvoiceId = invoice.id;
+
+      // Ensure the invoice exists on the server (Blob) before sending
+      try {
+        await apiClient.get(`/invoices/${serverInvoiceId}`);
+      } catch (getErr) {
+        if (getErr?.response?.status === 404) {
+          // Persist a copy to server (will get a new ID)
+          const payload = {
+            client: invoice.client,
+            items: invoice.items,
+            notes: invoice.notes,
+            terms: invoice.terms,
+            issueDate: invoice.issueDate,
+            dueDate: invoice.dueDate,
+            currency: invoice.currency || 'GBP'
+          };
+          const createRes = await apiClient.post('/invoices', payload);
+          serverInvoiceId = createRes.data.id;
+        }
+      }
       
       if (useEmailJS) {
         console.log('Attempting to send via EmailJS (browser-based)...');
@@ -92,12 +114,12 @@ export default function InvoiceDetail() {
         response = { data: response };
         
       } else {
-        // Use server-based email (Gmail or Resend)
+        // Use server-based email (Resend by default)
         const endpoint = useGmail ? '/invoices/gmail-send' : '/invoices/send';
         console.log(`Attempting to send via ${useGmail ? 'Gmail SMTP' : 'Resend API'}...`);
         
         response = await apiClient.post(endpoint, { 
-          invoiceId: invoice.id, 
+          invoiceId: serverInvoiceId, 
           recipientEmail: invoice.client.email,
           bankingDetails,
           companyDetails
@@ -105,13 +127,14 @@ export default function InvoiceDetail() {
       }
       
       // Update status via API
-      await apiClient.put(`/invoices/${id}`, { status: 'Sent' });
+      await apiClient.put(`/invoices/${serverInvoiceId}`, { status: 'Sent' });
       
       // Also update fallback storage to keep in sync
-      saveFallbackInvoice({ 
-        ...invoice, 
-        status: 'Sent', 
-        updatedAt: new Date().toISOString() 
+      saveFallbackInvoice({
+        ...invoice,
+        id: serverInvoiceId,
+        status: 'Sent',
+        updatedAt: new Date().toISOString()
       });
       
       fetchInvoice();
@@ -124,7 +147,7 @@ export default function InvoiceDetail() {
       
       // Log email details for debugging
       console.log('Email sent successfully:', {
-        invoiceId: invoice.id,
+        invoiceId: serverInvoiceId,
         recipientEmail: invoice.client.email,
         emailId: response.data.emailId,
         sentAt: response.data.sentAt
