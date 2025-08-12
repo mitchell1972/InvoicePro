@@ -171,6 +171,32 @@ export default function InvoiceDetail() {
         return;
       }
       
+      // If EmailJS was used and the browser blocked the request (CORS/AdBlock),
+      // automatically fall back to server-based Gmail SMTP
+      const attemptedEmailJs = error.message?.includes('EmailJS');
+      const networkBlocked = /Failed to fetch|NetworkError|TypeError/i.test(error.message || '');
+      if (useEmailJS && (attemptedEmailJs || networkBlocked)) {
+        try {
+          console.warn('EmailJS failed due to network/CORS. Falling back to Gmail SMTP...');
+          const fallbackRes = await apiClient.post('/invoices/gmail-send', {
+            invoiceId: invoice.id,
+            recipientEmail: invoice.client.email,
+            bankingDetails,
+            companyDetails
+          });
+          // Update status via API after fallback success
+          await apiClient.put(`/invoices/${id}`, { status: 'Sent' });
+          saveFallbackInvoice({ ...invoice, status: 'Sent', updatedAt: new Date().toISOString() });
+          fetchInvoice();
+          if (fallbackRes.data?.success) {
+            alert(`✅ Invoice sent via Gmail SMTP fallback!\n\n📧 Sent to: ${invoice.client.email}`);
+            return;
+          }
+        } catch (fallbackErr) {
+          console.error('Fallback to Gmail SMTP also failed:', fallbackErr);
+        }
+      }
+
       // Extract error message properly
       let errorMessage = 'Unknown error occurred';
       if (error.response?.data) {
