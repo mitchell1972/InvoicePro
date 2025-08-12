@@ -172,23 +172,23 @@ export default function InvoiceDetail() {
         
         // Provide options to the user
         const result = window.confirm(
-          '⚠️ Invoice Exists Locally Only\n\n' +
-          'This invoice is saved in your browser but not on the server.\n' +
-          'The email service cannot send it because:\n' +
-          '• The API is currently unavailable\n' +
-          '• The invoice needs to exist on the server to send emails\n\n' +
-          'For testing purposes, would you like to:\n' +
-          '✓ Click OK to mark as "Sent" (no email will be sent)\n' +
-          '✗ Click Cancel to keep as "Draft"\n\n' +
-          'To enable actual email sending:\n' +
-          '1. Add RESEND_API_KEY to Vercel environment variables\n' +
-          '2. Ensure API functions are deployed\n' +
+          '⚠️ Invoice Exists Locally Only\\n\\n' +
+          'This invoice is saved in your browser but not on the server.\\n' +
+          'The email service cannot send it because:\\n' +
+          '• The API is currently unavailable\\n' +
+          '• The invoice needs to exist on the server to send emails\\n\\n' +
+          'For testing purposes, would you like to:\\n' +
+          '✓ Click OK to mark as \"Sent\" (no email will be sent)\\n' +
+          '✗ Click Cancel to keep as \"Draft\"\\n\\n' +
+          'To enable actual email sending:\\n' +
+          '1. Add RESEND_API_KEY to Vercel environment variables\\n' +
+          '2. Ensure API functions are deployed\\n' +
           '3. Redeploy the application'
         );
         
         if (result) {
           setInvoice({ ...invoice, status: 'Sent' });
-          alert('✅ Invoice marked as "Sent"\n\nNote: Email was not actually sent due to service unavailability.');
+          alert('✅ Invoice marked as \"Sent\"\\n\\nNote: Email was not actually sent due to service unavailability.');
         }
         return;
       }
@@ -211,7 +211,7 @@ export default function InvoiceDetail() {
           saveFallbackInvoice({ ...invoice, status: 'Sent', updatedAt: new Date().toISOString() });
           fetchInvoice();
           if (fallbackRes.data?.success) {
-            alert(`✅ Invoice sent via Gmail SMTP fallback!\n\n📧 Sent to: ${invoice.client.email}`);
+            alert(`✅ Invoice sent via Gmail SMTP fallback!\\n\\n📧 Sent to: ${invoice.client.email}`);
             return;
           }
         } catch (fallbackErr) {
@@ -245,8 +245,6 @@ export default function InvoiceDetail() {
         alert('❌ EmailJS Configuration Required\n\nWe detected that EmailJS is selected but not fully configured.\n\nSteps:\n1. Ensure Service ID, Template ID, and Public Key are set in emailjs-service.js\n2. Make sure your EmailJS template accepts variables like to_email, invoice_number, total, email_content_html\n3. Redeploy and hard refresh (Cmd/Ctrl+Shift+R)');
       } else if (error.response?.status === 403) {
         alert('❌ Email sending failed: Testing mode restriction.\n\nIn development mode, emails can only be sent to the verified owner email address.\n\nTo send to any email address, you need to:\n1. Set up a verified domain in Resend\n2. Update the FROM_EMAIL to use your domain\n\nOr use EmailJS for unrestricted email sending!');
-      } else if (error.response?.status === 500 && errorMessage.includes('RESEND_API_KEY')) {
-        alert('❌ Email service not configured.\n\nTo send emails, you need to:\n1. Sign up for a free Resend account at https://resend.com\n2. Get your API key from the Resend dashboard\n3. Add RESEND_API_KEY to your environment variables in Vercel\n\nAlternatively, use EmailJS for browser-based email sending without server configuration!');
       } else {
         alert(`❌ Failed to send invoice.\n\nError: ${errorMessage}\n\nPlease check your email settings and try again.`);
       }
@@ -544,5 +542,3 @@ export default function InvoiceDetail() {
     </div>
   );
 }
-
-

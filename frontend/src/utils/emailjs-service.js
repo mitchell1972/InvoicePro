@@ -8,7 +8,7 @@
 const EMAILJS_CONFIG = {
   SERVICE_ID: 'service_gh4oqg3',     // Your Gmail service
   TEMPLATE_ID: 'template_2yro5ul',   // Your invoice template  
-  PUBLIC_KEY: '9olw9DixFqoBU12qo'    // Your public API key
+  PUBLIC_KEY: 'YOUR_PUBLIC_KEY'    // Your public API key
 };
 
 // To get these values:

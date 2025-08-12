@@ -7,6 +7,4 @@ const getEnvVar = (key, fallback) => {
 };
 
 export const VITE_API_URL = getEnvVar('VITE_API_URL', '/api');
-export const VITE_STRIPE_PUBLISHABLE_KEY = getEnvVar('VITE_STRIPE_PUBLISHABLE_KEY', 'pk_test_demo');
-
-
+export const VITE_STRIPE_PUBLISHABLE_KEY = getEnvVar('VITE_STRIPE_PUBLISHABLE_KEY', 'pk_test_your_stripe_publishable_key');

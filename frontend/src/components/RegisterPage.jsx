@@ -6,7 +6,7 @@ import { VITE_STRIPE_PUBLISHABLE_KEY } from '../config/env';
 import { useAuth } from '../context/AuthContext';
 import apiClient from '../api/client';
 
-const stripePromise = loadStripe(VITE_STRIPE_PUBLISHABLE_KEY || 'pk_test_demo');
+const stripePromise = loadStripe(VITE_STRIPE_PUBLISHABLE_KEY);
 
 function RegistrationForm() {
   const [formData, setFormData] = useState({

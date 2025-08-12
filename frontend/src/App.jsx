@@ -13,7 +13,7 @@ import Settings from './components/Settings';
 import PaymentPage from './components/PaymentPage';
 import Navbar from './components/Navbar';
 
-const stripePromise = loadStripe(VITE_STRIPE_PUBLISHABLE_KEY || 'pk_test_demo');
+const stripePromise = loadStripe(VITE_STRIPE_PUBLISHABLE_KEY);
 
 function ProtectedRoute({ children }) {
   const { token } = useAuth();
@@ -98,5 +98,3 @@ export default function App() {
     </AuthProvider>
   );
 }
-
-

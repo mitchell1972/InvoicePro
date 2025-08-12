@@ -59,15 +59,6 @@ async function sendInvoiceEmail(req, res, params) {
   const fromEmail = process.env.FROM_EMAIL || 'invoices@yourdomain.com';
   const companyName = companyDetails?.name || 'Your Company';
   
-  // Check if Resend API key is configured
-  if (!process.env.RESEND_API_KEY || process.env.RESEND_API_KEY === 'undefined') {
-    console.error('[EMAIL SERVICE] RESEND_API_KEY not configured');
-    return res.status(500).json({
-      error: 'Email service not configured',
-      details: 'RESEND_API_KEY is missing. Please configure your Resend API key in environment variables.'
-    });
-  }
-  
   try {
     const { data, error } = await resend.emails.send({
       from: `${companyName} <${fromEmail}>`,
