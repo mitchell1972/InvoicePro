@@ -253,9 +253,12 @@ function generateInvoiceEmailContent(invoice, bankingDetails, companyDetails) {
   const paymentLink = `${process.env.NEXT_PUBLIC_BASE_URL || ''}/pay/${invoice.id}`;
   const companyName = companyDetails?.name || 'Your Company';
   
+  // Debug logging
+  console.log('[EMAIL SERVICE] Banking details received:', JSON.stringify(bankingDetails, null, 2));
+  
   let bankingSection = '';
   if (bankingDetails && bankingDetails.country) {
-    if (bankingDetails.country === 'GB' && bankingDetails.uk && bankingDetails.uk.bankName) {
+    if (bankingDetails.country === 'GB' && bankingDetails.uk && bankingDetails.uk.bankName && bankingDetails.uk.bankName.trim() !== '') {
       const uk = bankingDetails.uk;
       bankingSection = `
 🏦 BANK TRANSFER (UK):
@@ -267,7 +270,7 @@ Account Number: ${uk.accountNumber}
 
 Please use invoice #${invoice.number} as your payment reference.
 `;
-    } else if (bankingDetails.country === 'US' && bankingDetails.us && bankingDetails.us.bankName) {
+    } else if (bankingDetails.country === 'US' && bankingDetails.us && bankingDetails.us.bankName && bankingDetails.us.bankName.trim() !== '') {
       const us = bankingDetails.us;
       bankingSection = `
 🏦 BANK TRANSFER (US):
@@ -281,6 +284,8 @@ Please use invoice #${invoice.number} as your payment reference.
 `;
     }
   }
+  
+  console.log('[EMAIL SERVICE] Banking section generated:', bankingSection ? 'YES' : 'NO');
 
   const itemsList = invoice.items.map(item => 
     `• ${item.description} - ${item.qty} x ${formatCurrency(item.unitPrice)} = ${formatCurrency(item.qty * item.unitPrice * (1 + item.taxPercent / 100))}`
@@ -346,7 +351,7 @@ function generateReminderEmailContent(invoice, reminder, bankingDetails, company
 
   let bankingSection = '';
   if (bankingDetails && bankingDetails.country) {
-    if (bankingDetails.country === 'GB' && bankingDetails.uk && bankingDetails.uk.bankName) {
+    if (bankingDetails.country === 'GB' && bankingDetails.uk && bankingDetails.uk.bankName && bankingDetails.uk.bankName.trim() !== '') {
       const uk = bankingDetails.uk;
       bankingSection = `
 🏦 BANK TRANSFER (UK):
@@ -358,7 +363,7 @@ Account Number: ${uk.accountNumber}
 
 Please use invoice #${invoice.number} as your payment reference.
 `;
-    } else if (bankingDetails.country === 'US' && bankingDetails.us && bankingDetails.us.bankName) {
+    } else if (bankingDetails.country === 'US' && bankingDetails.us && bankingDetails.us.bankName && bankingDetails.us.bankName.trim() !== '') {
       const us = bankingDetails.us;
       bankingSection = `
 🏦 BANK TRANSFER (US):
