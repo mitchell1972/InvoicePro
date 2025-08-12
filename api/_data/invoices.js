@@ -1,9 +1,9 @@
-import { promises as fs } from 'fs';
-import { join } from 'path';
-import { put, head, del, list } from '@vercel/blob';
+const { promises: fs } = require('fs');
+const { join } = require('path');
+const { put, head, del, list } = require('@vercel/blob');
 
 // Storage configuration
-const STORAGE_FILE = join(process.cwd(), 'data', 'invoices.json');
+const STORAGE_FILE = join(__dirname, '..', 'data', 'invoices.json');
 const IS_SERVERLESS = !!process.env.VERCEL;
 const USE_BLOB = IS_SERVERLESS && !!process.env.BLOB_READ_WRITE_TOKEN;
 const BLOB_KEY = 'invoices-data.json';
@@ -281,7 +281,7 @@ async function loadInvoicesFromStorage() {
   } else {
     // Local development: use file-based storage
     try {
-      await fs.mkdir(join(process.cwd(), 'data'), { recursive: true });
+      await fs.mkdir(join(__dirname, '..', 'data'), { recursive: true });
       const data = await fs.readFile(STORAGE_FILE, 'utf8');
       const invoices = JSON.parse(data);
       console.log(`[STORAGE] Loaded ${invoices.length} invoices from file`);
@@ -290,7 +290,7 @@ async function loadInvoicesFromStorage() {
       console.log('[STORAGE] Loading default invoices (file not found or invalid)');
       // Save defaults to file for next time
       try {
-        await fs.mkdir(join(process.cwd(), 'data'), { recursive: true });
+        await fs.mkdir(join(__dirname, '..', 'data'), { recursive: true });
         await fs.writeFile(STORAGE_FILE, JSON.stringify(defaultInvoices, null, 2));
       } catch (writeError) {
         console.error('[STORAGE] Could not save defaults to file:', writeError);
@@ -338,7 +338,7 @@ async function saveInvoicesToStorage(invoices) {
   } else {
     // Local development: save to file
     try {
-      await fs.mkdir(join(process.cwd(), 'data'), { recursive: true });
+      await fs.mkdir(join(__dirname, '..', 'data'), { recursive: true });
       await fs.writeFile(STORAGE_FILE, JSON.stringify(invoices, null, 2));
       console.log(`[STORAGE] Saved ${invoices.length} invoices to file: ${STORAGE_FILE}`);
     } catch (error) {
@@ -349,13 +349,13 @@ async function saveInvoicesToStorage(invoices) {
 }
 
 // Force clear the cache (useful before critical operations)
-export function clearInvoiceCache() {
+function clearInvoiceCache() {
   console.log('[STORAGE] Clearing invoice cache');
   invoicesCache = null;
   cacheTimestamp = 0;
 }
 
-export async function getInvoices(forceRefresh = false) {
+async function getInvoices(forceRefresh = false) {
   const now = Date.now();
   
   // Clear cache if forced refresh requested
@@ -383,7 +383,7 @@ export async function getInvoices(forceRefresh = false) {
   }
 }
 
-export async function setInvoices(newInvoices) {
+async function setInvoices(newInvoices) {
   try {
     await saveInvoicesToStorage(newInvoices);
     
@@ -414,7 +414,7 @@ export async function setInvoices(newInvoices) {
   }
 }
 
-export function calculateTotals(items) {
+function calculateTotals(items) {
   const subtotal = items.reduce((sum, item) => sum + item.qty * item.unitPrice, 0);
   const tax = items.reduce(
     (sum, item) => sum + item.qty * item.unitPrice * (item.taxPercent / 100),
@@ -422,3 +422,10 @@ export function calculateTotals(items) {
   );
   return { subtotal, tax, total: subtotal + tax };
 }
+
+module.exports = {
+  getInvoices,
+  setInvoices,
+  calculateTotals,
+  clearInvoiceCache
+};

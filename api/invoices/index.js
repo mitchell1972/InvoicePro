@@ -1,6 +1,6 @@
-import { getInvoices, setInvoices, calculateTotals } from '../_data/invoices.js';
+const { getInvoices, setInvoices, calculateTotals } = require('../_data/invoices.js');
 
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
   if (req.method === 'GET') {
     try {
       console.log('[DEBUG] Received GET request for invoices');
