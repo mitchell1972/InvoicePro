@@ -272,8 +272,9 @@ function generateInvoiceEmailContent(invoice, bankingDetails, companyDetails) {
   const paymentLink = `${process.env.NEXT_PUBLIC_BASE_URL || ''}/pay/${invoice.id}`;
   const companyName = companyDetails?.name || 'Your Company';
   
-  // Debug logging
+  // Enhanced Debug logging
   console.log('[EMAIL SERVICE] Banking details received:', JSON.stringify(bankingDetails, null, 2));
+  console.log('[EMAIL SERVICE] Company details received:', JSON.stringify(companyDetails, null, 2));
   
   let bankingSection = '';
   if (bankingDetails && bankingDetails.country) {
@@ -305,6 +306,16 @@ Please use invoice #${invoice.number} as your payment reference.
   }
   
   console.log('[EMAIL SERVICE] Banking section generated:', bankingSection ? 'YES' : 'NO');
+  if (!bankingSection) {
+    console.log('[EMAIL SERVICE] Reason for no banking section:', {
+      hasBankingDetails: !!bankingDetails,
+      hasCountry: !!bankingDetails?.country,
+      isGB: bankingDetails?.country === 'GB',
+      isUS: bankingDetails?.country === 'US',
+      hasUkBankName: !!bankingDetails?.uk?.bankName?.trim(),
+      hasUsBankName: !!bankingDetails?.us?.bankName?.trim(),
+    });
+  }
 
   const itemsList = invoice.items.map(item => 
     `• ${item.description} - ${item.qty} x ${formatCurrency(item.unitPrice)} = ${formatCurrency(item.qty * item.unitPrice * (1 + item.taxPercent / 100))}`

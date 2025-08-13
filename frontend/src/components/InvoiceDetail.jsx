@@ -68,7 +68,7 @@ export default function InvoiceDetail() {
     // that these flags are available in the catch block as well
     const settings = localStorage.getItem('invoiceSettings');
     const settingsData = settings ? JSON.parse(settings) : {};
-    const bankingDetails = settingsData.banking || null;
+    const bankingDetails = settingsData.banking || {};
     const companyDetails = settingsData.company || { name: 'Your Company' };
 
     // Check if banking details are configured before sending
