@@ -2,14 +2,10 @@
   "version": 2,
   "builds": [
     {
-      "src": "production-server.js",
-      "use": "@vercel/node"
-    },
-    {
-      "src": "frontend/package.json",
-      "use": "@vercel/static-build",
+      "src": "package.json",
+      "use": "@vercel/node",
       "config": {
-        "distDir": "dist"
+        "includeFiles": ["frontend/dist/**", "api/**"]
       }
     }
   ],
@@ -28,7 +24,7 @@
   },
   "functions": {
     "production-server.js": {
-      "maxDuration": 10
+      "maxDuration": 30
     }
   }
 }
