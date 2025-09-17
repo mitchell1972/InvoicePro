@@ -3,24 +3,38 @@
     "Coordinator": {
       "1": {
         "id": "1",
-        "content": "Analyze the current deployment configuration issue",
-        "details": "1. Examine the current vercel.json and deployment structure. 2. Identify why API endpoints return HTML instead of JSON. 3. Determine if the deployment platform supports serverless functions.",
-        "status": "completed",
+        "content": "Analyze current application structure and Vercel requirements",
+        "details": "Review the existing Node.js server structure, API routes, and frontend assets to understand what needs to be adapted for Vercel's serverless environment",
+        "status": "pending",
         "priority": "high"
       },
       "2": {
         "id": "2",
-        "content": "Fix the API deployment configuration",
-        "details": "1. Modify the deployment structure to properly handle API functions. 2. Update configuration files if needed. 3. Ensure API endpoints are properly routed and handled.",
-        "status": "completed",
+        "content": "Restructure API routes for Vercel serverless functions",
+        "details": "Convert the existing API structure to Vercel's serverless function format, ensuring proper file organization and exports",
+        "status": "pending",
         "priority": "high"
       },
       "3": {
         "id": "3",
-        "content": "Test and verify the production deployment",
-        "details": "1. Deploy the fixed version. 2. Test API endpoints return proper JSON responses. 3. Test complete user workflows (create invoice, send email). 4. Verify both frontend and backend work together.",
-        "status": "completed",
+        "content": "Create Vercel configuration files",
+        "details": "Generate vercel.json with proper routing, build settings, and function configurations. Set up environment variable templates",
+        "status": "pending",
         "priority": "high"
+      },
+      "4": {
+        "id": "4",
+        "content": "Update frontend configuration for Vercel deployment",
+        "details": "Ensure frontend assets are properly configured for Vercel's static file serving and integrate with the serverless API",
+        "status": "pending",
+        "priority": "medium"
+      },
+      "5": {
+        "id": "5",
+        "content": "Create deployment documentation and scripts",
+        "details": "Provide step-by-step Vercel deployment instructions, including CLI commands, environment setup, and troubleshooting guide",
+        "status": "pending",
+        "priority": "medium"
       }
     }
   }
