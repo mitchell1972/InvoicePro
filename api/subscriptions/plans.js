@@ -9,7 +9,7 @@ export default function handler(req, res) {
       name: 'Monthly Plan',
       description: 'Full access to all invoice features',
       price: 899, // $8.99 in cents
-      currency: 'gbp',
+      currency: 'usd',
       interval: 'month',
       intervalCount: 1,
       trialPeriodDays: 7,
@@ -27,7 +27,7 @@ export default function handler(req, res) {
       name: 'Yearly Plan',
       description: 'Full access with over 1 month free',
       price: 9900, // $99.00 in cents (equivalent to 11+ months)
-      currency: 'gbp',
+      currency: 'usd',
       interval: 'year',
       intervalCount: 1,
       trialPeriodDays: 7,
