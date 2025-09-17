@@ -1,39 +1,36 @@
 {
-  "buildCommand": "echo 'Using existing build from frontend/dist'",
-  "outputDirectory": "frontend/dist",
-  "framework": "vite",
-  "cleanUrls": true,
-  "trailingSlash": false,
-  "headers": [
+  "version": 2,
+  "builds": [
     {
-      "source": "/(.*)",
-      "headers": [
-        {
-          "key": "Cache-Control",
-          "value": "no-cache, no-store, must-revalidate"
-        },
-        {
-          "key": "X-Frame-Options",
-          "value": "DENY"
-        }
-      ]
+      "src": "production-server.js",
+      "use": "@vercel/node"
+    },
+    {
+      "src": "frontend/package.json",
+      "use": "@vercel/static-build",
+      "config": {
+        "distDir": "dist"
+      }
     }
   ],
+  "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "/production-server.js"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/production-server.js"
+    }
+  ],
+  "env": {
+    "NODE_ENV": "production"
+  },
   "functions": {
-    "api/**/*.js": {
+    "production-server.js": {
       "maxDuration": 10
     }
-  },
-  "crons": [
-    {
-      "path": "/api/invoices/remind-overdue",
-      "schedule": "0 9 * * *"
-    }
-  ],
-  "rewrites": [
-    { "source": "/api/(.*)", "destination": "/api/$1" },
-    { "source": "/((?!api).*)", "destination": "/index.html" }
-  ]
+  }
 }
 
 
