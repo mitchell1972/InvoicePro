@@ -30,7 +30,7 @@ function RegistrationForm() {
     {
       id: 'monthly',
       name: 'Monthly Plan',
-      price: '£29',
+      price: '£8.99',
       period: '/month',
       description: 'Perfect for getting started',
       features: ['Unlimited invoices', 'Payment processing', 'Email support']
@@ -38,10 +38,10 @@ function RegistrationForm() {
     {
       id: 'yearly',
       name: 'Yearly Plan',
-      price: '£290',
+      price: '£99',
       period: '/year',
-      description: 'Save 17% with annual billing',
-      features: ['Unlimited invoices', 'Payment processing', 'Priority support', '2 months free'],
+      description: 'Save 8% with annual billing',
+      features: ['Unlimited invoices', 'Payment processing', 'Priority support', 'Over 1 month free'],
       popular: true
     }
   ];
