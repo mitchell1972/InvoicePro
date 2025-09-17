@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Banking Details Test Setup</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input, select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .current-settings {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 20px 0;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Banking Details Test Setup</h1>
+        <p>Use this page to configure banking details for testing invoice emails.</p>
+        
+        <div id="currentSettings" class="current-settings">
+            <h3>Current Settings</h3>
+            <pre id="settingsDisplay">No settings found</pre>
+        </div>
+
+        <form id="bankingForm">
+            <div class="form-group">
+                <label for="country">Banking Country:</label>
+                <select id="country" onchange="toggleCountryFields()">
+                    <option value="GB">United Kingdom</option>
+                    <option value="US">United States</option>
+                </select>
+            </div>
+
+            <div id="companySection">
+                <h3>Company Details</h3>
+                <div class="grid">
+                    <div class="form-group">
+                        <label for="companyName">Company Name:</label>
+                        <input type="text" id="companyName" value="Freelancer Business Ltd">
+                    </div>
+                    <div class="form-group">
+                        <label for="companyAddress">Address:</label>
+                        <input type="text" id="companyAddress" value="123 Business Street">
+                    </div>
+                </div>
+            </div>
+
+            <div id="ukFields">
+                <h3>UK Banking Details</h3>
+                <div class="grid">
+                    <div class="form-group">
+                        <label for="ukBankName">Bank Name:</label>
+                        <input type="text" id="ukBankName" value="Barclays Bank">
+                    </div>
+                    <div class="form-group">
+                        <label for="ukAccountName">Account Name:</label>
+                        <input type="text" id="ukAccountName" value="Freelancer Business Ltd">
+                    </div>
+                    <div class="form-group">
+                        <label for="ukSortCode">Sort Code:</label>
+                        <input type="text" id="ukSortCode" value="123456" placeholder="123456">
+                    </div>
+                    <div class="form-group">
+                        <label for="ukAccountNumber">Account Number:</label>
+                        <input type="text" id="ukAccountNumber" value="12345678" placeholder="12345678">
+                    </div>
+                </div>
+            </div>
+
+            <div id="usFields" style="display: none;">
+                <h3>US Banking Details</h3>
+                <div class="grid">
+                    <div class="form-group">
+                        <label for="usBankName">Bank Name:</label>
+                        <input type="text" id="usBankName" value="Bank of America">
+                    </div>
+                    <div class="form-group">
+                        <label for="usAccountName">Account Name:</label>
+                        <input type="text" id="usAccountName" value="Freelancer Business LLC">
+                    </div>
+                    <div class="form-group">
+                        <label for="usRoutingNumber">Routing Number:</label>
+                        <input type="text" id="usRoutingNumber" value="123456789" placeholder="123456789">
+                    </div>
+                    <div class="form-group">
+                        <label for="usAccountNumber">Account Number:</label>
+                        <input type="text" id="usAccountNumber" value="1234567890" placeholder="Account number">
+                    </div>
+                </div>
+            </div>
+
+            <button type="button" onclick="saveSettings()">Save Banking Details</button>
+            <button type="button" onclick="clearSettings()">Clear Settings</button>
+            <button type="button" onclick="loadCurrentSettings()">Refresh Display</button>
+        </form>
+
+        <div id="message"></div>
+
+        <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #ddd;">
+            <h3>Instructions</h3>
+            <ol>
+                <li>Fill in the banking details above</li>
+                <li>Click "Save Banking Details"</li>
+                <li>Go to your invoice app at <a href="http://localhost:3001" target="_blank">http://localhost:3001</a></li>
+                <li>Create or view an invoice and send it via email</li>
+                <li>The banking details should now appear in the email</li>
+            </ol>
+        </div>
+    </div>
+
+    <script>
+        function toggleCountryFields() {
+            const country = document.getElementById('country').value;
+            const ukFields = document.getElementById('ukFields');
+            const usFields = document.getElementById('usFields');
+            
+            if (country === 'GB') {
+                ukFields.style.display = 'block';
+                usFields.style.display = 'none';
+            } else {
+                ukFields.style.display = 'none';
+                usFields.style.display = 'block';
+            }
+        }
+
+        function saveSettings() {
+            const country = document.getElementById('country').value;
+            
+            const settings = {
+                company: {
+                    name: document.getElementById('companyName').value,
+                    address: document.getElementById('companyAddress').value,
+                    city: 'London',
+                    postcode: 'SW1A 1AA',
+                    country: 'United Kingdom',
+                    vatNumber: 'GB123456789'
+                },
+                defaults: {
+                    currency: 'GBP',
+                    taxPercent: 20,
+                    paymentTerms: 'Net 30'
+                },
+                reminders: {
+                    enabled: true,
+                    firstReminderDays: 1,
+                    secondReminderDays: 7,
+                    thirdReminderDays: 15,
+                    finalReminderDays: 30
+                },
+                banking: {
+                    country: country,
+                    uk: {
+                        bankName: document.getElementById('ukBankName').value,
+                        accountName: document.getElementById('ukAccountName').value,
+                        accountNumber: document.getElementById('ukAccountNumber').value,
+                        sortCode: document.getElementById('ukSortCode').value
+                    },
+                    us: {
+                        bankName: document.getElementById('usBankName').value,
+                        accountName: document.getElementById('usAccountName').value,
+                        accountNumber: document.getElementById('usAccountNumber').value,
+                        routingNumber: document.getElementById('usRoutingNumber').value
+                    }
+                }
+            };
+
+            localStorage.setItem('invoiceSettings', JSON.stringify(settings));
+            
+            document.getElementById('message').innerHTML = 
+                '<div class="success">✅ Banking details saved successfully! You can now test invoice emails.</div>';
+            
+            loadCurrentSettings();
+        }
+
+        function clearSettings() {
+            localStorage.removeItem('invoiceSettings');
+            document.getElementById('message').innerHTML = 
+                '<div class="success">🗑️ Settings cleared.</div>';
+            loadCurrentSettings();
+        }
+
+        function loadCurrentSettings() {
+            const settings = localStorage.getItem('invoiceSettings');
+            const display = document.getElementById('settingsDisplay');
+            
+            if (settings) {
+                const parsed = JSON.parse(settings);
+                display.textContent = JSON.stringify(parsed, null, 2);
+                
+                // Populate form with current values
+                if (parsed.banking) {
+                    document.getElementById('country').value = parsed.banking.country || 'GB';
+                    toggleCountryFields();
+                    
+                    if (parsed.banking.uk) {
+                        document.getElementById('ukBankName').value = parsed.banking.uk.bankName || '';
+                        document.getElementById('ukAccountName').value = parsed.banking.uk.accountName || '';
+                        document.getElementById('ukSortCode').value = parsed.banking.uk.sortCode || '';
+                        document.getElementById('ukAccountNumber').value = parsed.banking.uk.accountNumber || '';
+                    }
+                    
+                    if (parsed.banking.us) {
+                        document.getElementById('usBankName').value = parsed.banking.us.bankName || '';
+                        document.getElementById('usAccountName').value = parsed.banking.us.accountName || '';
+                        document.getElementById('usRoutingNumber').value = parsed.banking.us.routingNumber || '';
+                        document.getElementById('usAccountNumber').value = parsed.banking.us.accountNumber || '';
+                    }
+                }
+                
+                if (parsed.company) {
+                    document.getElementById('companyName').value = parsed.company.name || '';
+                    document.getElementById('companyAddress').value = parsed.company.address || '';
+                }
+            } else {
+                display.textContent = 'No settings found in localStorage';
+            }
+        }
+
+        // Load current settings on page load
+        loadCurrentSettings();
+    </script>
+</body>
+</html>

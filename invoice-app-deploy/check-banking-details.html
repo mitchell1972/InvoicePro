@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Check Banking Details</title>
+  <style>
+    body { font-family: sans-serif; padding: 2em; }
+    #details { border: 1px solid #ccc; padding: 1em; margin-top: 1em; white-space: pre-wrap; font-family: monospace; }
+  </style>
+</head>
+<body>
+  <h1>Check Banking Details</h1>
+  <p>This page checks if your banking details are saved in the browser's local storage.</p>
+  <button onclick="checkDetails()">Check Now</button>
+  <div id="details"></div>
+  <script>
+    function checkDetails() {
+      const settings = localStorage.getItem('invoiceSettings');
+      const detailsDiv = document.getElementById('details');
+      if (settings) {
+        const parsedSettings = JSON.parse(settings);
+        const bankingDetails = parsedSettings.banking;
+        if (bankingDetails) {
+          detailsDiv.textContent = JSON.stringify(bankingDetails, null, 2);
+        } else {
+          detailsDiv.textContent = 'Banking details not found in settings.';
+        }
+      } else {
+        detailsDiv.textContent = 'No settings found in local storage.';
+      }
+    }
+  </script>
+</body>
+</html>

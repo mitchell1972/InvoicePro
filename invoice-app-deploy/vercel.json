@@ -1,0 +1,32 @@
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "package.json",
+      "use": "@vercel/node",
+      "config": {
+        "includeFiles": ["frontend/dist/**", "api/**"]
+      }
+    }
+  ],
+  "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "/production-server.js"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/production-server.js"
+    }
+  ],
+  "env": {
+    "NODE_ENV": "production"
+  },
+  "functions": {
+    "production-server.js": {
+      "maxDuration": 30
+    }
+  }
+}
+
+
