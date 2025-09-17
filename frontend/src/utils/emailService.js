@@ -79,23 +79,23 @@ export async function sendInvoiceEmail(invoice, recipientEmail) {
       due_date: new Date(invoice.dueDate).toLocaleDateString(),
       
       // Financial details
-      subtotal: `£${invoice.totals.subtotal.toFixed(2)}`,
-      tax: `£${invoice.totals.tax.toFixed(2)}`,
-      total_amount: `£${invoice.totals.total.toFixed(2)}`,
+      subtotal: `$${invoice.totals.subtotal.toFixed(2)}`,
+      tax: `$${invoice.totals.tax.toFixed(2)}`,
+      total_amount: `$${invoice.totals.total.toFixed(2)}`,
       
       // Items list as HTML
       items_html: invoice.items.map(item => 
         `<tr>
           <td>${item.description}</td>
           <td>${item.qty}</td>
-          <td>£${item.unitPrice.toFixed(2)}</td>
-          <td>£${(item.qty * item.unitPrice).toFixed(2)}</td>
+          <td>$${item.unitPrice.toFixed(2)}</td>
+          <td>$${(item.qty * item.unitPrice).toFixed(2)}</td>
         </tr>`
       ).join(''),
       
       // Items list as plain text
       items_text: invoice.items.map(item => 
-        `• ${item.description} - ${item.qty} x £${item.unitPrice.toFixed(2)} = £${(item.qty * item.unitPrice).toFixed(2)}`
+        `• ${item.description} - ${item.qty} x $${item.unitPrice.toFixed(2)} = $${(item.qty * item.unitPrice).toFixed(2)}`
       ).join('\n'),
       
       // Payment link

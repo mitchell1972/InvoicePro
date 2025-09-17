@@ -35,9 +35,9 @@ describe('InvoiceForm', () => {
     const priceInput = screen.getByPlaceholderText(/price/i);
     fireEvent.change(qtyInput, { target: { value: '2' } });
     fireEvent.change(priceInput, { target: { value: '100' } });
-    expect(screen.getByText(/£200.00/)).toBeInTheDocument();
-    expect(screen.getByText(/£40.00/)).toBeInTheDocument();
-    expect(screen.getByText(/£240.00/)).toBeInTheDocument();
+    expect(screen.getByText(/\$200.00/)).toBeInTheDocument();
+    expect(screen.getByText(/\$40.00/)).toBeInTheDocument();
+    expect(screen.getByText(/\$240.00/)).toBeInTheDocument();
   });
 });
 

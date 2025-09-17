@@ -90,15 +90,15 @@ export async function sendInvoiceEmailJS(invoice, recipientEmail, companyDetails
         <tr>
           <td style="padding: 8px; border-bottom: 1px solid #ddd;">${item.description}</td>
           <td style="padding: 8px; border-bottom: 1px solid #ddd; text-align: center;">${item.qty}</td>
-          <td style="padding: 8px; border-bottom: 1px solid #ddd; text-align: right;">£${item.unitPrice.toFixed(2)}</td>
-          <td style="padding: 8px; border-bottom: 1px solid #ddd; text-align: right;">£${lineTotal.toFixed(2)}</td>
+          <td style="padding: 8px; border-bottom: 1px solid #ddd; text-align: right;">$${item.unitPrice.toFixed(2)}</td>
+          <td style="padding: 8px; border-bottom: 1px solid #ddd; text-align: right;">$${lineTotal.toFixed(2)}</td>
         </tr>
       `;
     }).join('');
     
     const itemsText = invoice.items.map(item => {
       const lineTotal = item.qty * item.unitPrice;
-      return `• ${item.description} - ${item.qty} x £${item.unitPrice.toFixed(2)} = £${lineTotal.toFixed(2)}`;
+      return `• ${item.description} - ${item.qty} x $${item.unitPrice.toFixed(2)} = $${lineTotal.toFixed(2)}`;
     }).join('\n');
     
     // Prepare banking details if provided
@@ -138,10 +138,10 @@ export async function sendInvoiceEmailJS(invoice, recipientEmail, companyDetails
       due_date: new Date(invoice.dueDate).toLocaleDateString('en-GB'),
       
       // Financial
-      currency: invoice.currency || 'GBP',
-      subtotal: `£${invoice.totals.subtotal.toFixed(2)}`,
-      tax: `£${invoice.totals.tax.toFixed(2)}`,
-      total: `£${invoice.totals.total.toFixed(2)}`,
+      currency: invoice.currency || 'USD',
+      subtotal: `$${invoice.totals.subtotal.toFixed(2)}`,
+      tax: `$${invoice.totals.tax.toFixed(2)}`,
+      total: `$${invoice.totals.total.toFixed(2)}`,
       
       // Items
       items_html: itemsHtml,
@@ -197,9 +197,9 @@ export async function sendInvoiceEmailJS(invoice, recipientEmail, companyDetails
             </table>
             
             <div style="text-align: right; margin-top: 20px;">
-              <p>Subtotal: £${invoice.totals.subtotal.toFixed(2)}<br>
-              Tax: £${invoice.totals.tax.toFixed(2)}<br>
-              <strong style="font-size: 1.2em; color: #667eea;">Total: £${invoice.totals.total.toFixed(2)}</strong></p>
+              <p>Subtotal: $${invoice.totals.subtotal.toFixed(2)}<br>
+              Tax: $${invoice.totals.tax.toFixed(2)}<br>
+              <strong style="font-size: 1.2em; color: #667eea;">Total: $${invoice.totals.total.toFixed(2)}</strong></p>
             </div>
             
             ${bankingHtml}
