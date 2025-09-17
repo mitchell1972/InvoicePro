@@ -3,31 +3,24 @@
     "Coordinator": {
       "1": {
         "id": "1",
-        "content": "Fix local development environment and dependency issues",
-        "details": "npm permission issues identified but build already exists. Root package dependencies also need installation but facing same issues.",
-        "status": "completed",
+        "content": "Analyze the current deployment configuration issue",
+        "details": "1. Examine the current vercel.json and deployment structure. 2. Identify why API endpoints return HTML instead of JSON. 3. Determine if the deployment platform supports serverless functions.",
+        "status": "pending",
         "priority": "high"
       },
       "2": {
         "id": "2",
-        "content": "Analyze and fix Vercel deployment configuration",
-        "details": "✅ Frontend successfully deployed to https://2lrcm787y51e.space.minimax.io. HTML and assets loading correctly. ❌ API endpoints still need to be deployed as serverless functions.",
-        "status": "completed",
+        "content": "Fix the API deployment configuration",
+        "details": "1. Modify the deployment structure to properly handle API functions. 2. Update configuration files if needed. 3. Ensure API endpoints are properly routed and handled.",
+        "status": "pending",
         "priority": "high"
       },
       "3": {
         "id": "3",
-        "content": "Test and verify production deployment",
-        "details": "Frontend working but API needs serverless deployment. Need to deploy to Vercel or similar platform that supports both static hosting and serverless functions together.",
-        "status": "in_progress",
-        "priority": "high"
-      },
-      "4": {
-        "id": "4",
-        "content": "Validate complete user journey in production",
-        "details": "1. Test invoice creation workflow. 2. Test email sending functionality. 3. Verify all features work as expected in production. 4. Provide final test report.",
+        "content": "Test and verify the production deployment",
+        "details": "1. Deploy the fixed version. 2. Test API endpoints return proper JSON responses. 3. Test complete user workflows (create invoice, send email). 4. Verify both frontend and backend work together.",
         "status": "pending",
-        "priority": "medium"
+        "priority": "high"
       }
     }
   }
