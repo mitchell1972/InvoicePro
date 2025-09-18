@@ -1,5 +1,6 @@
 {
   "version": 2,
+  "outputDirectory": "frontend/dist",
   "rewrites": [
     {
       "source": "/api/(.*)",
@@ -7,17 +8,11 @@
     },
     {
       "source": "/(.*)",
-      "destination": "/production-server.js"
+      "destination": "/index.html"
     }
   ],
-  "env": {
-    "NODE_ENV": "production"
-  },
   "functions": {
-    "production-server.js": {
-      "maxDuration": 30
-    },
-    "api/index.js": {
+    "api/**/*.js": {
       "maxDuration": 30
     }
   }
