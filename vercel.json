@@ -1,22 +1,13 @@
 {
   "version": 2,
-  "builds": [
+  "rewrites": [
     {
-      "src": "package.json",
-      "use": "@vercel/node",
-      "config": {
-        "includeFiles": ["frontend/dist/**", "api/**"]
-      }
-    }
-  ],
-  "routes": [
-    {
-      "src": "/api/(.*)",
-      "dest": "/production-server.js"
+      "source": "/api/(.*)",
+      "destination": "/api/$1"
     },
     {
-      "src": "/(.*)",
-      "dest": "/production-server.js"
+      "source": "/(.*)",
+      "destination": "/production-server.js"
     }
   ],
   "env": {
@@ -24,6 +15,9 @@
   },
   "functions": {
     "production-server.js": {
+      "maxDuration": 30
+    },
+    "api/index.js": {
       "maxDuration": 30
     }
   }
