@@ -6,7 +6,7 @@ import { VITE_STRIPE_PUBLISHABLE_KEY } from '../config/env';
 import { useAuth } from '../context/AuthContext';
 import apiClient from '../api/client';
 
-const stripePromise = loadStripe(VITE_STRIPE_PUBLISHABLE_KEY);
+const stripePromise = VITE_STRIPE_PUBLISHABLE_KEY ? loadStripe(VITE_STRIPE_PUBLISHABLE_KEY) : null;
 
 function RegistrationForm() {
   const [formData, setFormData] = useState({
@@ -260,6 +260,25 @@ function RegistrationForm() {
           {step === 3 && (
             <div className="space-y-4">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Payment Information</h3>
+              
+              {!VITE_STRIPE_PUBLISHABLE_KEY && (
+                <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
+                  <div className="flex">
+                    <div className="flex-shrink-0">
+                      <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                      </svg>
+                    </div>
+                    <div className="ml-3">
+                      <h3 className="text-sm font-medium text-red-800">Payment system unavailable</h3>
+                      <div className="mt-2 text-sm text-red-700">
+                        <p>The payment system is currently not configured. Please contact support or try again later.</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+              
               <div className="bg-gray-50 rounded-lg p-4 mb-4">
                 <div className="flex justify-between items-center">
                   <span className="font-medium">
@@ -274,28 +293,32 @@ function RegistrationForm() {
                 </p>
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Card Information</label>
-                <div className="p-3 border border-gray-300 rounded-lg">
-                  <CardElement
-                    options={{
-                      style: {
-                        base: {
-                          fontSize: '16px',
-                          color: '#424770',
-                          '::placeholder': {
-                            color: '#aab7c4',
+              {VITE_STRIPE_PUBLISHABLE_KEY && (
+                <>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Card Information</label>
+                    <div className="p-3 border border-gray-300 rounded-lg">
+                      <CardElement
+                        options={{
+                          style: {
+                            base: {
+                              fontSize: '16px',
+                              color: '#424770',
+                              '::placeholder': {
+                                color: '#aab7c4',
+                              },
+                            },
                           },
-                        },
-                      },
-                    }}
-                  />
-                </div>
-              </div>
+                        }}
+                      />
+                    </div>
+                  </div>
 
-              <div className="bg-green-50 border border-green-200 rounded-lg p-4 text-sm text-green-800">
-                <strong>Secure:</strong> Your payment information is encrypted and secure. We never store your card details.
-              </div>
+                  <div className="bg-green-50 border border-green-200 rounded-lg p-4 text-sm text-green-800">
+                    <strong>Secure:</strong> Your payment information is encrypted and secure. We never store your card details.
+                  </div>
+                </>
+              )}
             </div>
           )}
 
@@ -311,7 +334,7 @@ function RegistrationForm() {
             )}
             <button
               type="submit"
-              disabled={loading || (step === 3 && !stripe)}
+              disabled={loading || (step === 3 && (!stripe || !VITE_STRIPE_PUBLISHABLE_KEY))}
               className="flex-1 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               {loading ? 'Processing...' : step === 3 ? 'Start Free Trial' : 'Continue'}
@@ -333,6 +356,10 @@ function RegistrationForm() {
 }
 
 export default function RegisterPage() {
+  if (!stripePromise) {
+    return <RegistrationForm />;
+  }
+  
   return (
     <Elements stripe={stripePromise}>
       <RegistrationForm />

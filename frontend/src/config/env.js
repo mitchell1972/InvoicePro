@@ -6,5 +6,15 @@ const getEnvVar = (key, fallback) => {
   return fallback;
 };
 
+// Validate Stripe key
+const validateStripeKey = (key) => {
+  if (!key || key === 'pk_test_your_stripe_publishable_key' || key.includes('demo') || key.includes('Demo')) {
+    console.error('Invalid or placeholder Stripe publishable key detected. Please configure a valid Stripe key.');
+    return null;
+  }
+  return key;
+};
+
 export const VITE_API_URL = getEnvVar('VITE_API_URL', '/api');
-export const VITE_STRIPE_PUBLISHABLE_KEY = getEnvVar('VITE_STRIPE_PUBLISHABLE_KEY', 'pk_test_your_stripe_publishable_key');
+export const VITE_STRIPE_PUBLISHABLE_KEY = validateStripeKey(getEnvVar('VITE_STRIPE_PUBLISHABLE_KEY', ''));
+

@@ -13,7 +13,8 @@ import Settings from './components/Settings';
 import PaymentPage from './components/PaymentPage';
 import Navbar from './components/Navbar';
 
-const stripePromise = loadStripe(VITE_STRIPE_PUBLISHABLE_KEY);
+// Only load Stripe if we have a valid key
+const stripePromise = VITE_STRIPE_PUBLISHABLE_KEY ? loadStripe(VITE_STRIPE_PUBLISHABLE_KEY) : null;
 
 function ProtectedRoute({ children }) {
   const { token } = useAuth();
