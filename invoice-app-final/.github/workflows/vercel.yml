@@ -1,0 +1,39 @@
+name: Deploy to Vercel
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Install Vercel CLI
+        run: npm install -g vercel
+      - name: Create Vercel Project Config
+        run: |
+          mkdir -p .vercel
+          echo '{ "orgId": "${{ secrets.VERCEL_ORG_ID }}", "projectId": "${{ secrets.VERCEL_PROJECT_ID }}" }' > .vercel/project.json
+      - name: Debug - Check if secrets are available
+        run: |
+          if [ -z "${{ secrets.VERCEL_TOKEN }}" ]; then
+            echo "VERCEL_TOKEN is empty or not set"
+          else
+            echo "VERCEL_TOKEN is set (length: ${#VERCEL_TOKEN})"
+          fi
+          if [ -z "${{ secrets.VERCEL_ORG_ID }}" ]; then
+            echo "VERCEL_ORG_ID is empty or not set"
+          else
+            echo "VERCEL_ORG_ID is set"
+          fi
+          if [ -z "${{ secrets.VERCEL_PROJECT_ID }}" ]; then
+            echo "VERCEL_PROJECT_ID is empty or not set"
+          else
+            echo "VERCEL_PROJECT_ID is set"
+          fi
+      - name: Build & Deploy to Production
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: vercel --prod --token="${VERCEL_TOKEN}"
