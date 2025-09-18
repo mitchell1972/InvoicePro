@@ -8,7 +8,7 @@ export default function handler(req, res) {
       id: 'monthly',
       name: 'Monthly Plan',
       description: 'Full access to all invoice features',
-      price: 899, // $8.99 in cents
+      price: 1499, // $14.99 in cents
       currency: 'usd',
       interval: 'month',
       intervalCount: 1,
@@ -25,8 +25,8 @@ export default function handler(req, res) {
     {
       id: 'yearly',
       name: 'Yearly Plan',
-      description: 'Full access with over 1 month free',
-      price: 9900, // $99.00 in cents (equivalent to 11+ months)
+      description: 'Full access with 2 months free',
+      price: 16000, // $160.00 in cents (equivalent to ~10.7 months)
       currency: 'usd',
       interval: 'year',
       intervalCount: 1,
@@ -38,9 +38,9 @@ export default function handler(req, res) {
         'Custom branding',
         'Analytics dashboard',
         'Priority email support',
-        'Over 1 month free'
+        '2 months free'
       ],
-      savings: '8% off monthly'
+      savings: '11% off monthly'
     }
   ];
 

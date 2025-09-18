@@ -30,7 +30,7 @@ function RegistrationForm() {
     {
       id: 'monthly',
       name: 'Monthly Plan',
-      price: '$8.99',
+      price: '$14.99',
       period: '/month',
       description: 'Perfect for getting started',
       features: ['Unlimited invoices', 'Payment processing', 'Email support']
@@ -38,10 +38,10 @@ function RegistrationForm() {
     {
       id: 'yearly',
       name: 'Yearly Plan',
-      price: '$99',
+      price: '$160',
       period: '/year',
-      description: 'Save 8% with annual billing',
-      features: ['Unlimited invoices', 'Payment processing', 'Priority support', 'Over 1 month free'],
+      description: 'Save 17% with annual billing',
+      features: ['Unlimited invoices', 'Payment processing', 'Priority support', '2 months free'],
       popular: true
     }
   ];
