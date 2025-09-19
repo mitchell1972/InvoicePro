@@ -99,6 +99,15 @@ vercel
 
 4. The GitHub Actions workflow will automatically build and commit the frontend dist folder on pushes to main.
 
+## CI/CD (GitHub Actions → Vercel)
+
+- On every push to `main`, `.github/workflows/vercel.yml` installs the Vercel CLI, links the project via `.vercel/project.json`, and runs `vercel --prod`.
+- Required repository secrets:
+  - `VERCEL_TOKEN`
+  - `VERCEL_ORG_ID`
+  - `VERCEL_PROJECT_ID`
+- Vercel behavior/configuration is controlled by `vercel.json`.
+
 ## API Endpoints
 
 - `POST /api/auth/login` - User authentication
