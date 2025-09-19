@@ -6,7 +6,15 @@ import { VITE_STRIPE_PUBLISHABLE_KEY } from '../config/env';
 import { useAuth } from '../context/AuthContext';
 import apiClient from '../api/client';
 
-const stripePromise = VITE_STRIPE_PUBLISHABLE_KEY ? loadStripe(VITE_STRIPE_PUBLISHABLE_KEY) : null;
+// Only load Stripe if we have a valid key
+let stripePromise = null;
+if (VITE_STRIPE_PUBLISHABLE_KEY && VITE_STRIPE_PUBLISHABLE_KEY.startsWith('pk_')) {
+  try {
+    stripePromise = loadStripe(VITE_STRIPE_PUBLISHABLE_KEY);
+  } catch (error) {
+    console.warn('Failed to load Stripe:', error);
+  }
+}
 
 function RegistrationForm() {
   const [formData, setFormData] = useState({
@@ -357,7 +365,22 @@ function RegistrationForm() {
 
 export default function RegisterPage() {
   if (!stripePromise) {
-    return <RegistrationForm />;
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="max-w-md w-full bg-white rounded-lg shadow-md p-8 text-center">
+          <h1 className="text-2xl font-bold text-gray-900 mb-4">Registration Temporarily Unavailable</h1>
+          <p className="text-gray-600 mb-6">
+            Payment processing is currently being configured. Please try again later or contact support.
+          </p>
+          <Link 
+            to="/login" 
+            className="inline-block px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
+          >
+            Go to Login
+          </Link>
+        </div>
+      </div>
+    );
   }
   
   return (

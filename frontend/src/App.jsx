@@ -14,7 +14,14 @@ import PaymentPage from './components/PaymentPage';
 import Navbar from './components/Navbar';
 
 // Only load Stripe if we have a valid key
-const stripePromise = VITE_STRIPE_PUBLISHABLE_KEY ? loadStripe(VITE_STRIPE_PUBLISHABLE_KEY) : null;
+let stripePromise = null;
+if (VITE_STRIPE_PUBLISHABLE_KEY && VITE_STRIPE_PUBLISHABLE_KEY.startsWith('pk_')) {
+  try {
+    stripePromise = loadStripe(VITE_STRIPE_PUBLISHABLE_KEY);
+  } catch (error) {
+    console.warn('Failed to load Stripe:', error);
+  }
+}
 
 function ProtectedRoute({ children }) {
   const { token } = useAuth();
@@ -39,9 +46,18 @@ export default function App() {
         <Route
           path="/pay/:id"
           element={
-            <Elements stripe={stripePromise}>
-              <PaymentPage />
-            </Elements>
+            stripePromise ? (
+              <Elements stripe={stripePromise}>
+                <PaymentPage />
+              </Elements>
+            ) : (
+              <div className="min-h-screen flex items-center justify-center">
+                <div className="text-center">
+                  <h1 className="text-2xl font-bold text-gray-900 mb-4">Payment System Unavailable</h1>
+                  <p className="text-gray-600">Payment processing is currently unavailable. Please contact support.</p>
+                </div>
+              </div>
+            )
           }
         />
         <Route
