@@ -2,6 +2,12 @@
   "version": 2,
   "buildCommand": "cd frontend && npm install && npm run build",
   "outputDirectory": "frontend/dist",
+  "env": {
+    "VITE_API_URL": "@VITE_API_URL",
+    "VITE_STRIPE_PUBLISHABLE_KEY": "@VITE_STRIPE_PUBLISHABLE_KEY",
+    "STRIPE_SECRET_KEY": "@STRIPE_SECRET_KEY",
+    "STRIPE_WEBHOOK_SECRET": "@STRIPE_WEBHOOK_SECRET"
+  },
   "rewrites": [
     {
       "source": "/api/(.*)",
@@ -29,5 +35,3 @@
     }
   }
 }
-
-
