@@ -63,12 +63,12 @@ export default async function handler(req, res) {
       customer: customer.id,
       items: [{
         price_data: {
-          currency: 'gbp',
+          currency: 'usd',
           product_data: {
             name: planId === 'yearly' ? 'Invoice App - Yearly' : 'Invoice App - Monthly',
             description: 'Professional invoice management system'
           },
-          unit_amount: planId === 'yearly' ? 29000 : 2900,
+          unit_amount: planId === 'yearly' ? 16000 : 1499,
           recurring: {
             interval: planId === 'yearly' ? 'year' : 'month',
           },
