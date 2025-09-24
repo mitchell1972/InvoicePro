@@ -39,8 +39,21 @@ export default function handler(req, res) {
         subscription: {
           ...user.subscription,
           status: subscriptionStatus,
-          daysLeftInTrial: subscriptionStatus === 'trialing' ? 
-            Math.max(0, Math.ceil((trialEnd - now) / (1000 * 60 * 60 * 24))) : 0
+          daysLeftInTrial: subscriptionStatus === 'trialing' ?
+            (() => {
+              const msPerDay = 1000 * 60 * 60 * 24;
+              const startUtc = Date.UTC(
+                now.getUTCFullYear(),
+                now.getUTCMonth(),
+                now.getUTCDate()
+              );
+              const endUtc = Date.UTC(
+                trialEnd.getUTCFullYear(),
+                trialEnd.getUTCMonth(),
+                trialEnd.getUTCDate()
+              );
+              return Math.max(0, Math.floor((endUtc - startUtc) / msPerDay));
+            })() : 0
         }
       },
       expiresIn: remember ? '30d' : '24h'
@@ -82,5 +95,3 @@ export default function handler(req, res) {
     message: 'Email must be valid and password must be at least 8 characters'
   });
 }
-
-

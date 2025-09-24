@@ -170,8 +170,20 @@ function getUserStatus(req, res) {
   // Calculate days left in trial
   const now = new Date();
   const trialEnd = new Date(user.subscription.trialEnd);
-  const daysLeftInTrial = user.subscription.status === 'trialing' ? 
-    Math.max(0, Math.ceil((trialEnd - now) / (1000 * 60 * 60 * 24))) : 0;
+  const msPerDay = 1000 * 60 * 60 * 24;
+  const startUtc = Date.UTC(
+    now.getUTCFullYear(),
+    now.getUTCMonth(),
+    now.getUTCDate()
+  );
+  const endUtc = Date.UTC(
+    trialEnd.getUTCFullYear(),
+    trialEnd.getUTCMonth(),
+    trialEnd.getUTCDate()
+  );
+  const daysLeftInTrial = user.subscription.status === 'trialing'
+    ? Math.max(0, Math.floor((endUtc - startUtc) / msPerDay))
+    : 0;
 
   return res.status(200).json({
     success: true,
