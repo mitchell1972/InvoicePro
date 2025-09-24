@@ -10,12 +10,32 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+
+      - name: Use Node.js 18
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      - name: Install dependencies (root)
+        run: npm ci
+
+      - name: Prisma generate
+        run: npx prisma generate
+
+      - name: Run Prisma migrate deploy
+        # Set DATABASE_URL in GitHub Secrets to your Vercel Postgres Production connection string
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: npx prisma migrate deploy
+
       - name: Install Vercel CLI
         run: npm install -g vercel
+
       - name: Create Vercel Project Config
         run: |
           mkdir -p .vercel
           echo '{ "orgId": "${{ secrets.VERCEL_ORG_ID }}", "projectId": "${{ secrets.VERCEL_PROJECT_ID }}" }' > .vercel/project.json
+
       - name: Debug - Check if secrets are available
         run: |
           if [ -z "${{ secrets.VERCEL_TOKEN }}" ]; then
@@ -33,7 +53,13 @@ jobs:
           else
             echo "VERCEL_PROJECT_ID is set"
           fi
-      - name: Build & Deploy to Production
+          if [ -z "${{ secrets.DATABASE_URL }}" ]; then
+            echo "DATABASE_URL is empty or not set (needed for migrate deploy)"
+          else
+            echo "DATABASE_URL is set"
+          fi
+
+      - name: Deploy to Vercel (Production)
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
         run: vercel --prod --token="${VERCEL_TOKEN}"

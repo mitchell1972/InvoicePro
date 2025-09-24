@@ -9,17 +9,24 @@
     "vercel-build": "cd frontend && npm install && npm run build",
     "start": "node production-server.js",
     "dev": "node production-server.js",
-    "deploy": "npm run build && npm start"
+    "deploy": "npm run build && npm start",
+    "postinstall": "prisma generate",
+    "prisma:generate": "prisma generate",
+    "prisma:migrate:deploy": "prisma migrate deploy"
   },
   "engines": {
     "node": ">=14.0.0"
   },
   "dependencies": {
+    "@prisma/client": "^6.16.2",
     "@vercel/blob": "^1.1.1",
-    "express": "^4.18.2",
     "cors": "^2.8.5",
+    "express": "^4.18.2",
     "nodemailer": "^7.0.5",
     "resend": "^4.0.1",
     "stripe": "^14.0.0"
+  },
+  "devDependencies": {
+    "prisma": "^6.16.2"
   }
 }
