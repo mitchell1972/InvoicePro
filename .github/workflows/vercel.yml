@@ -17,7 +17,7 @@ jobs:
           node-version: 18
 
       - name: Install dependencies (root)
-        run: npm ci
+        run: npm install
 
       - name: Prisma generate
         run: npx prisma generate
