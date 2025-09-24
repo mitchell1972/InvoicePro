@@ -58,22 +58,37 @@ export default async function handler(req, res) {
       },
     });
 
-    // Create subscription with 7-day trial
-    const subscription = await stripe.subscriptions.create({
-      customer: customer.id,
-      items: [{
+    // Determine subscription items from configured Price IDs (preferred) or Product ID fallback
+    const monthlyPriceId = process.env.STRIPE_PRICE_MONTHLY;
+    const yearlyPriceId = process.env.STRIPE_PRICE_YEARLY;
+    const productId = process.env.STRIPE_PRODUCT_ID;
+
+    let items;
+    if (monthlyPriceId && yearlyPriceId) {
+      const priceId = planId === 'yearly' ? yearlyPriceId : monthlyPriceId;
+      items = [{ price: priceId }];
+    } else if (productId) {
+      items = [{
         price_data: {
+          product: productId,
           currency: 'usd',
-          product_data: {
-            name: planId === 'yearly' ? 'Invoice App - Yearly' : 'Invoice App - Monthly',
-            description: 'Professional invoice management system'
-          },
           unit_amount: planId === 'yearly' ? 16000 : 1499,
           recurring: {
             interval: planId === 'yearly' ? 'year' : 'month',
           },
         },
-      }],
+      }];
+    } else {
+      return res.status(500).json({
+        error: 'Configuration error',
+        details: 'Missing STRIPE_PRICE_MONTHLY/STRIPE_PRICE_YEARLY or STRIPE_PRODUCT_ID env vars'
+      });
+    }
+
+    // Create subscription with 7-day trial
+    const subscription = await stripe.subscriptions.create({
+      customer: customer.id,
+      items,
       trial_period_days: 7,
       payment_behavior: 'default_incomplete',
       expand: ['latest_invoice.payment_intent'],
