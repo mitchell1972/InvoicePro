@@ -23,9 +23,9 @@ jobs:
         run: npx prisma generate
 
       - name: Run Prisma migrate deploy
-        # Set DATABASE_URL in GitHub Secrets to your Vercel Postgres Production connection string
+        # Using POSTGRES_URL because schema.prisma reads env("POSTGRES_URL"); map from existing DATABASE_URL secret
         env:
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          POSTGRES_URL: ${{ secrets.DATABASE_URL }}
         run: npx prisma migrate deploy
 
       - name: Install Vercel CLI
