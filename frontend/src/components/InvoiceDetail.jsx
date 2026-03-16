@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import apiClient from '../api/client';
 import { formatCurrency, formatDate } from '../utils/money';
 import StatusBadge from './StatusBadge';
@@ -39,11 +39,11 @@ export default function InvoiceDetail() {
       setInvoice(data);
     } catch (error) {
       console.error('Failed to fetch invoice from API:', error);
-      
+
       // Try fallback localStorage data when API fails
       console.log('Attempting to load invoice from fallback storage...');
       const fallbackInvoice = getFallbackInvoiceById(id);
-      
+
       if (fallbackInvoice) {
         console.log('Invoice found in fallback storage:', fallbackInvoice);
         setInvoice(fallbackInvoice);
@@ -63,7 +63,7 @@ export default function InvoiceDetail() {
   const handleSend = async () => {
     // First check if we're dealing with a locally-stored invoice
     const isLocalInvoice = !invoice.id.startsWith('inv_000') && invoice.id.includes('_');
-    
+
     // Prepare settings and decide which email service BEFORE the try/catch so
     // that these flags are available in the catch block as well
     const settings = localStorage.getItem('invoiceSettings');
@@ -96,7 +96,7 @@ export default function InvoiceDetail() {
     const useGmail = false; // false => use '/invoices/send' (Resend)
 
     try {
-      
+
       let response;
       let serverInvoiceId = invoice.id;
 
@@ -119,10 +119,10 @@ export default function InvoiceDetail() {
           serverInvoiceId = createRes.data.id;
         }
       }
-      
+
       if (useEmailJS) {
         console.log('Attempting to send via EmailJS (browser-based)...');
-        
+
         // Send directly via EmailJS (browser-based, no server required)
         response = await sendInvoiceEmailJS(
           invoice,
@@ -130,26 +130,26 @@ export default function InvoiceDetail() {
           companyDetails,
           bankingDetails
         );
-        
+
         // Wrap response to match server format
         response = { data: response };
-        
+
       } else {
         // Use server-based email (Resend by default)
         const endpoint = useGmail ? '/invoices/gmail-send' : '/invoices/send';
         console.log(`Attempting to send via ${useGmail ? 'Gmail SMTP' : 'Resend API'}...`);
-        
-        response = await apiClient.post(endpoint, { 
-          invoiceId: serverInvoiceId, 
+
+        response = await apiClient.post(endpoint, {
+          invoiceId: serverInvoiceId,
           recipientEmail: invoice.client.email,
           bankingDetails,
           companyDetails
         });
       }
-      
+
       // Update status via API
       await apiClient.put(`/invoices/${serverInvoiceId}`, { status: 'Sent' });
-      
+
       // Also update fallback storage to keep in sync
       saveFallbackInvoice({
         ...invoice,
@@ -157,15 +157,15 @@ export default function InvoiceDetail() {
         status: 'Sent',
         updatedAt: new Date().toISOString()
       });
-      
+
       fetchInvoice();
-      
+
       if (response.data.success) {
         alert(`✅ Invoice sent successfully!\n\n📧 Sent to: ${invoice.client.email}\n📅 Sent at: ${new Date(response.data.sentAt).toLocaleString()}\n📋 Email ID: ${response.data.emailId}`);
       } else {
         alert('Invoice sent successfully!');
       }
-      
+
       // Log email details for debugging
       console.log('Email sent successfully:', {
         invoiceId: serverInvoiceId,
@@ -173,24 +173,24 @@ export default function InvoiceDetail() {
         emailId: response.data.emailId,
         sentAt: response.data.sentAt
       });
-      
+
     } catch (error) {
       console.error('Failed to send invoice:', error);
       console.error('Error response:', error.response?.data);
-      
+
       // Check if this is an API availability issue or invoice not on server
-      const isApiDown = error.code === 'ERR_NETWORK' || 
+      const isApiDown = error.code === 'ERR_NETWORK' ||
                         error.response?.status === 404 && error.config?.url?.includes('/api/');
       const isInvoiceNotOnServer = error.response?.status === 404;
-      
+
       if (isApiDown || isInvoiceNotOnServer) {
         // Update local storage to mark as "sent" even though email didn't actually go out
-        saveFallbackInvoice({ 
-          ...invoice, 
-          status: 'Sent', 
-          updatedAt: new Date().toISOString() 
+        saveFallbackInvoice({
+          ...invoice,
+          status: 'Sent',
+          updatedAt: new Date().toISOString()
         });
-        
+
         // Provide options to the user
         const result = window.confirm(
           '⚠️ Invoice Exists Locally Only\\n\\n' +
@@ -206,14 +206,14 @@ export default function InvoiceDetail() {
           '2. Ensure API functions are deployed\\n' +
           '3. Redeploy the application'
         );
-        
+
         if (result) {
           setInvoice({ ...invoice, status: 'Sent' });
           alert('✅ Invoice marked as \"Sent\"\\n\\nNote: Email was not actually sent due to service unavailability.');
         }
         return;
       }
-      
+
       // If EmailJS was used and the browser blocked the request (CORS/AdBlock),
       // automatically fall back to server-based Gmail SMTP
       const attemptedEmailJs = (error.message || '').includes('EmailJS');
@@ -256,7 +256,7 @@ export default function InvoiceDetail() {
       } else if (error.message) {
         errorMessage = error.message;
       }
-      
+
       // More specific error messages based on email service
       // Only show the EmailJS Configuration alert when it is truly a config error
       if (
@@ -269,7 +269,7 @@ export default function InvoiceDetail() {
       } else {
         alert(`❌ Failed to send invoice.\n\nError: ${errorMessage}\n\nPlease check your email settings and try again.`);
       }
-      
+
       // Final guard to ensure user feedback in any unexpected case
       if (!errorMessage) {
         alert('❌ Failed to send invoice due to an unexpected error. Please try again.');
@@ -284,14 +284,14 @@ export default function InvoiceDetail() {
   const handleMarkPaid = async () => {
     try {
       await apiClient.put(`/invoices/${id}`, { status: 'Paid' });
-      
+
       // Also update fallback storage to keep in sync
-      saveFallbackInvoice({ 
-        ...invoice, 
-        status: 'Paid', 
-        updatedAt: new Date().toISOString() 
+      saveFallbackInvoice({
+        ...invoice,
+        status: 'Paid',
+        updatedAt: new Date().toISOString()
       });
-      
+
       fetchInvoice();
     } catch (error) {
       console.error('Failed to update invoice:', error);
@@ -300,7 +300,7 @@ export default function InvoiceDetail() {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center h-64">
+      <div className="flex justify-center items-center h-64" role="status">
         <div className="text-gray-500">Loading...</div>
       </div>
     );
@@ -308,7 +308,7 @@ export default function InvoiceDetail() {
 
   if (!invoice) {
     return (
-      <div className="max-w-4xl mx-auto text-center py-12">
+      <div className="max-w-4xl mx-auto text-center py-12" role="alert">
         <div className="bg-red-50 border border-red-200 rounded-lg p-6">
           <h2 className="text-lg font-semibold text-red-800 mb-2">Invoice Not Found</h2>
           <p className="text-red-600 mb-4">
@@ -321,15 +321,15 @@ export default function InvoiceDetail() {
             <br />• Invalid invoice ID
           </p>
           <div className="flex justify-center gap-2">
-            <button 
+            <button
               onClick={() => navigate('/dashboard')}
-              className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
+              className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
             >
               Back to Dashboard
             </button>
-            <button 
+            <button
               onClick={() => window.location.reload()}
-              className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+              className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2"
             >
               Refresh Page
             </button>
@@ -351,28 +351,47 @@ export default function InvoiceDetail() {
         <div className="flex gap-2">
           {invoice.status === 'Draft' && (
             <>
-              <button onClick={handlePreviewEmail} className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
+              <button
+                onClick={handlePreviewEmail}
+                className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2"
+              >
                 Preview Email
               </button>
-              <button onClick={handleSend} className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors">
+              <button
+                onClick={handleSend}
+                className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
+              >
                 Send Invoice
               </button>
             </>
           )}
           {invoice.status === 'Sent' && (
             <>
-              <button onClick={handlePreviewEmail} className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
+              <button
+                onClick={handlePreviewEmail}
+                className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2"
+              >
                 Preview Email
               </button>
-              <button onClick={handleSend} className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+              <button
+                onClick={handleSend}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+              >
                 Resend Invoice
               </button>
-              <button onClick={handleMarkPaid} className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">
+              <button
+                onClick={handleMarkPaid}
+                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
+              >
                 Mark as Paid
               </button>
             </>
           )}
-          <button onClick={() => navigate(`/invoices/${id}/edit`)} className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
+          <button
+            onClick={() => navigate(`/invoices/${id}/edit`)}
+            aria-label="Edit invoice"
+            className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2"
+          >
             Edit
           </button>
         </div>
@@ -383,29 +402,47 @@ export default function InvoiceDetail() {
           <div className="grid grid-cols-2 gap-6">
             <div>
               <h3 className="text-sm font-medium text-gray-500 mb-2">Bill To</h3>
-              <p className="font-semibold">{invoice.client.name}</p>
-              <p className="text-gray-600">{invoice.client.email}</p>
-              {invoice.client.company && <p className="text-gray-600">{invoice.client.company}</p>}
+              <dl>
+                <dt className="sr-only">Client Name</dt>
+                <dd className="font-semibold">{invoice.client.name}</dd>
+                <dt className="sr-only">Client Email</dt>
+                <dd className="text-gray-600">{invoice.client.email}</dd>
+                {invoice.client.company && (
+                  <>
+                    <dt className="sr-only">Company</dt>
+                    <dd className="text-gray-600">{invoice.client.company}</dd>
+                  </>
+                )}
+              </dl>
             </div>
             <div className="text-right">
-              <div className="space-y-1">
-                <p className="text-sm text-gray-500">Issue Date: <span className="font-medium text-gray-900">{formatDate(invoice.issueDate)}</span></p>
-                <p className="text-sm text-gray-500">Due Date: <span className="font-medium text-gray-900">{formatDate(invoice.dueDate)}</span></p>
-                <p className="text-sm text-gray-500">Terms: <span className="font-medium text-gray-900">{invoice.terms}</span></p>
-              </div>
+              <dl className="space-y-1">
+                <div className="text-sm text-gray-500">
+                  <dt className="inline">Issue Date: </dt>
+                  <dd className="inline font-medium text-gray-900">{formatDate(invoice.issueDate)}</dd>
+                </div>
+                <div className="text-sm text-gray-500">
+                  <dt className="inline">Due Date: </dt>
+                  <dd className="inline font-medium text-gray-900">{formatDate(invoice.dueDate)}</dd>
+                </div>
+                <div className="text-sm text-gray-500">
+                  <dt className="inline">Terms: </dt>
+                  <dd className="inline font-medium text-gray-900">{invoice.terms}</dd>
+                </div>
+              </dl>
             </div>
           </div>
         </div>
 
         <div className="p-6">
-          <table className="w-full">
+          <table className="w-full" aria-label="Invoice line items">
             <thead>
               <tr className="border-b border-gray-200">
-                <th className="text-left py-2 text-sm font-medium text-gray-700">Description</th>
-                <th className="text-right py-2 text-sm font-medium text-gray-700">Qty</th>
-                <th className="text-right py-2 text-sm font-medium text-gray-700">Price</th>
-                <th className="text-right py-2 text-sm font-medium text-gray-700">Tax</th>
-                <th className="text-right py-2 text-sm font-medium text-gray-700">Total</th>
+                <th scope="col" className="text-left py-2 text-sm font-medium text-gray-700">Description</th>
+                <th scope="col" className="text-right py-2 text-sm font-medium text-gray-700">Qty</th>
+                <th scope="col" className="text-right py-2 text-sm font-medium text-gray-700">Price</th>
+                <th scope="col" className="text-right py-2 text-sm font-medium text-gray-700">Tax</th>
+                <th scope="col" className="text-right py-2 text-sm font-medium text-gray-700">Total</th>
               </tr>
             </thead>
             <tbody>
@@ -439,7 +476,7 @@ export default function InvoiceDetail() {
           </div>
 
           {invoice.notes && (
-            <div className="mt-6 pt-6 border-top border-gray-200">
+            <div className="mt-6 pt-6 border-t border-gray-200">
               <h3 className="text-sm font-medium text-gray-700 mb-2">Notes</h3>
               <p className="text-sm text-gray-600">{invoice.notes}</p>
             </div>
@@ -449,8 +486,20 @@ export default function InvoiceDetail() {
             <div className="mt-6 pt-6 border-t border-gray-200">
               <h3 className="text-sm font-medium text-gray-700 mb-2">Payment Link</h3>
               <div className="flex gap-2">
-                <input type="text" value={paymentLink} readOnly className="flex-1 px-3 py-2 bg-gray-50 border border-gray-300 rounded-lg text-sm" />
-                <button onClick={() => navigator.clipboard.writeText(paymentLink)} className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors text-sm">Copy Link</button>
+                <input
+                  type="text"
+                  value={paymentLink}
+                  readOnly
+                  aria-label="Payment link URL"
+                  className="flex-1 px-3 py-2 bg-gray-50 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
+                />
+                <button
+                  onClick={() => navigator.clipboard.writeText(paymentLink)}
+                  aria-label="Copy payment link to clipboard"
+                  className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors text-sm focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2"
+                >
+                  Copy Link
+                </button>
               </div>
             </div>
           )}
@@ -458,30 +507,30 @@ export default function InvoiceDetail() {
           {bankingDetails && (
             <div className="mt-6 pt-6 border-t border-gray-200">
               <h3 className="text-sm font-medium text-gray-700 mb-3">Bank Transfer Details</h3>
-              
+
               {bankingDetails.country === 'GB' && bankingDetails.uk && bankingDetails.uk.bankName && (
                 <div className="bg-gray-50 rounded-lg p-4">
                   <h4 className="text-sm font-medium text-gray-800 mb-2">UK Bank Transfer</h4>
-                  <div className="grid grid-cols-2 gap-3 text-sm">
+                  <dl className="grid grid-cols-2 gap-3 text-sm">
                     <div>
-                      <span className="text-gray-600">Bank Name:</span>
-                      <p className="font-medium text-gray-900">{bankingDetails.uk.bankName}</p>
+                      <dt className="text-gray-600">Bank Name:</dt>
+                      <dd className="font-medium text-gray-900">{bankingDetails.uk.bankName}</dd>
                     </div>
                     <div>
-                      <span className="text-gray-600">Account Name:</span>
-                      <p className="font-medium text-gray-900">{bankingDetails.uk.accountName}</p>
+                      <dt className="text-gray-600">Account Name:</dt>
+                      <dd className="font-medium text-gray-900">{bankingDetails.uk.accountName}</dd>
                     </div>
                     <div>
-                      <span className="text-gray-600">Sort Code:</span>
-                      <p className="font-medium text-gray-900 font-mono">
+                      <dt className="text-gray-600">Sort Code:</dt>
+                      <dd className="font-medium text-gray-900 font-mono">
                         {bankingDetails.uk.sortCode.replace(/(\d{2})(\d{2})(\d{2})/, '$1-$2-$3')}
-                      </p>
+                      </dd>
                     </div>
                     <div>
-                      <span className="text-gray-600">Account Number:</span>
-                      <p className="font-medium text-gray-900 font-mono">{bankingDetails.uk.accountNumber}</p>
+                      <dt className="text-gray-600">Account Number:</dt>
+                      <dd className="font-medium text-gray-900 font-mono">{bankingDetails.uk.accountNumber}</dd>
                     </div>
-                  </div>
+                  </dl>
                   <p className="text-xs text-gray-600 mt-3">
                     Please use <strong>#{invoice.number}</strong> as the payment reference.
                   </p>
@@ -491,24 +540,24 @@ export default function InvoiceDetail() {
               {bankingDetails.country === 'US' && bankingDetails.us && bankingDetails.us.bankName && (
                 <div className="bg-gray-50 rounded-lg p-4">
                   <h4 className="text-sm font-medium text-gray-800 mb-2">US Bank Transfer (ACH)</h4>
-                  <div className="grid grid-cols-2 gap-3 text-sm">
+                  <dl className="grid grid-cols-2 gap-3 text-sm">
                     <div>
-                      <span className="text-gray-600">Bank Name:</span>
-                      <p className="font-medium text-gray-900">{bankingDetails.us.bankName}</p>
+                      <dt className="text-gray-600">Bank Name:</dt>
+                      <dd className="font-medium text-gray-900">{bankingDetails.us.bankName}</dd>
                     </div>
                     <div>
-                      <span className="text-gray-600">Account Name:</span>
-                      <p className="font-medium text-gray-900">{bankingDetails.us.accountName}</p>
+                      <dt className="text-gray-600">Account Name:</dt>
+                      <dd className="font-medium text-gray-900">{bankingDetails.us.accountName}</dd>
                     </div>
                     <div>
-                      <span className="text-gray-600">Routing Number (ABA):</span>
-                      <p className="font-medium text-gray-900 font-mono">{bankingDetails.us.routingNumber}</p>
+                      <dt className="text-gray-600">Routing Number (ABA):</dt>
+                      <dd className="font-medium text-gray-900 font-mono">{bankingDetails.us.routingNumber}</dd>
                     </div>
                     <div>
-                      <span className="text-gray-600">Account Number:</span>
-                      <p className="font-medium text-gray-900 font-mono">{bankingDetails.us.accountNumber}</p>
+                      <dt className="text-gray-600">Account Number:</dt>
+                      <dd className="font-medium text-gray-900 font-mono">{bankingDetails.us.accountNumber}</dd>
                     </div>
-                  </div>
+                  </dl>
                   <p className="text-xs text-gray-600 mt-3">
                     Please use <strong>#{invoice.number}</strong> as the payment reference.
                   </p>
@@ -519,12 +568,12 @@ export default function InvoiceDetail() {
                 <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
                   <p className="text-sm text-yellow-800">
                     Banking details not configured. Set up your bank transfer details in{' '}
-                    <button 
-                      onClick={() => navigate('/settings')}
-                      className="font-medium underline hover:text-yellow-900"
+                    <Link
+                      to="/settings"
+                      className="font-medium underline hover:text-yellow-900 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-offset-2 rounded"
                     >
                       Settings
-                    </button>{' '}
+                    </Link>{' '}
                     to include them in invoice emails.
                   </p>
                 </div>

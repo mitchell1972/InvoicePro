@@ -18,7 +18,13 @@ export default defineConfig({
   },
   define: {
     'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'production')
+  },
+  test: {
+    globals: true,
+    environment: 'jsdom',
+    setupFiles: './src/test/setup.js',
+    css: true,
+    include: ['src/**/*.test.{js,jsx}'],
+    exclude: ['__tests__/**']
   }
 });
-
-

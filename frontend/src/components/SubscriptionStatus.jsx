@@ -10,7 +10,7 @@ export default function SubscriptionStatus() {
   const { subscription } = user;
   const isTrialing = subscription.status === 'trialing';
   const isExpired = subscription.status === 'trial_expired' || subscription.status === 'past_due';
-  
+
   const getStatusColor = () => {
     switch (subscription.status) {
       case 'active':
@@ -28,13 +28,13 @@ export default function SubscriptionStatus() {
   const getStatusMessage = () => {
     switch (subscription.status) {
       case 'active':
-        return `Active subscription • Next billing: ${formatDate(subscription.currentPeriodEnd)}`;
+        return `Active subscription - Next billing: ${formatDate(subscription.currentPeriodEnd)}`;
       case 'trialing':
-        return `Free trial • ${subscription.daysLeftInTrial || 0} days remaining`;
+        return `Free trial - ${subscription.daysLeftInTrial || 0} days remaining`;
       case 'trial_expired':
-        return 'Trial expired • Please update your subscription';
+        return 'Trial expired - Please update your subscription';
       case 'past_due':
-        return 'Payment failed • Please update your payment method';
+        return 'Payment failed - Please update your payment method';
       default:
         return 'Subscription status unknown';
     }
@@ -44,7 +44,7 @@ export default function SubscriptionStatus() {
   if (subscription.status === 'active') return null;
 
   return (
-    <div className={`mb-6 p-4 border rounded-lg ${getStatusColor()}`}>
+    <div className={`mb-6 p-4 border rounded-lg ${getStatusColor()}`} role="status" aria-label="Subscription status">
       <div className="flex items-center justify-between">
         <div>
           <p className="font-medium">{getStatusMessage()}</p>
@@ -62,7 +62,7 @@ export default function SubscriptionStatus() {
         {(isTrialing || isExpired) && (
           <button
             onClick={() => window.location.href = '/settings#subscription'}
-            className="px-4 py-2 bg-white border border-current rounded-lg hover:bg-opacity-10 transition-colors text-sm font-medium"
+            className="px-4 py-2 bg-white border border-current rounded-lg hover:bg-opacity-10 transition-colors text-sm font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-current"
           >
             {isExpired ? 'Upgrade Now' : 'Manage'}
           </button>

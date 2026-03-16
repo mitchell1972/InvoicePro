@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useId } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { formatDate } from '../utils/money';
@@ -6,6 +6,7 @@ import { formatDate } from '../utils/money';
 export default function Settings() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const id = useId();
   const [settings, setSettings] = useState({
     company: {
       name: 'Your Company Ltd',
@@ -54,28 +55,54 @@ export default function Settings() {
   const handleSave = (e) => {
     e.preventDefault();
     localStorage.setItem('invoiceSettings', JSON.stringify(settings));
-    
+
     // Show success message
     alert('Settings saved successfully!');
-    
+
     // Navigate to dashboard after a short delay
     setTimeout(() => {
       navigate('/dashboard');
     }, 1000);
   };
 
+  // Generate unique IDs for all form fields
+  const companyNameId = `${id}-company-name`;
+  const vatNumberId = `${id}-vat-number`;
+  const addressId = `${id}-address`;
+  const cityId = `${id}-city`;
+  const postcodeId = `${id}-postcode`;
+  const countryId = `${id}-country`;
+  const currencyId = `${id}-currency`;
+  const taxRateId = `${id}-tax-rate`;
+  const paymentTermsId = `${id}-payment-terms`;
+  const bankingCountryId = `${id}-banking-country`;
+  const ukBankNameId = `${id}-uk-bank-name`;
+  const ukAccountNameId = `${id}-uk-account-name`;
+  const ukSortCodeId = `${id}-uk-sort-code`;
+  const ukAccountNumberId = `${id}-uk-account-number`;
+  const usBankNameId = `${id}-us-bank-name`;
+  const usAccountNameId = `${id}-us-account-name`;
+  const usRoutingNumberId = `${id}-us-routing-number`;
+  const usAccountNumberId = `${id}-us-account-number`;
+  const remindersEnabledId = `${id}-reminders-enabled`;
+  const firstReminderId = `${id}-first-reminder`;
+  const secondReminderId = `${id}-second-reminder`;
+  const thirdReminderId = `${id}-third-reminder`;
+  const finalReminderId = `${id}-final-reminder`;
+
   return (
     <div className="max-w-3xl mx-auto">
       <h1 className="text-2xl font-bold text-gray-900 mb-6">Settings</h1>
 
       <form onSubmit={handleSave} className="space-y-6">
-        <div className="bg-white rounded-lg shadow p-6">
-          <h2 className="text-lg font-semibold mb-4">Company Information</h2>
-          
+        <fieldset className="bg-white rounded-lg shadow p-6">
+          <legend className="text-lg font-semibold mb-4">Company Information</legend>
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Company Name</label>
+              <label htmlFor={companyNameId} className="block text-sm font-medium text-gray-700 mb-1">Company Name</label>
               <input
+                id={companyNameId}
                 type="text"
                 value={settings.company.name}
                 onChange={(e) => setSettings({ ...settings, company: { ...settings.company, name: e.target.value } })}
@@ -84,8 +111,9 @@ export default function Settings() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">VAT/Tax Number</label>
+              <label htmlFor={vatNumberId} className="block text-sm font-medium text-gray-700 mb-1">VAT/Tax Number</label>
               <input
+                id={vatNumberId}
                 type="text"
                 value={settings.company.vatNumber}
                 onChange={(e) => setSettings({ ...settings, company: { ...settings.company, vatNumber: e.target.value } })}
@@ -94,8 +122,9 @@ export default function Settings() {
             </div>
 
             <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-gray-700 mb-1">Address</label>
+              <label htmlFor={addressId} className="block text-sm font-medium text-gray-700 mb-1">Address</label>
               <input
+                id={addressId}
                 type="text"
                 value={settings.company.address}
                 onChange={(e) => setSettings({ ...settings, company: { ...settings.company, address: e.target.value } })}
@@ -104,8 +133,9 @@ export default function Settings() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">City</label>
+              <label htmlFor={cityId} className="block text-sm font-medium text-gray-700 mb-1">City</label>
               <input
+                id={cityId}
                 type="text"
                 value={settings.company.city}
                 onChange={(e) => setSettings({ ...settings, company: { ...settings.company, city: e.target.value } })}
@@ -114,8 +144,9 @@ export default function Settings() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Postcode</label>
+              <label htmlFor={postcodeId} className="block text-sm font-medium text-gray-700 mb-1">Postcode</label>
               <input
+                id={postcodeId}
                 type="text"
                 value={settings.company.postcode}
                 onChange={(e) => setSettings({ ...settings, company: { ...settings.company, postcode: e.target.value } })}
@@ -124,8 +155,9 @@ export default function Settings() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Country</label>
+              <label htmlFor={countryId} className="block text-sm font-medium text-gray-700 mb-1">Country</label>
               <input
+                id={countryId}
                 type="text"
                 value={settings.company.country}
                 onChange={(e) => setSettings({ ...settings, company: { ...settings.company, country: e.target.value } })}
@@ -133,15 +165,16 @@ export default function Settings() {
               />
             </div>
           </div>
-        </div>
+        </fieldset>
 
-        <div className="bg-white rounded-lg shadow p-6">
-          <h2 className="text-lg font-semibold mb-4">Default Settings</h2>
-          
+        <fieldset className="bg-white rounded-lg shadow p-6">
+          <legend className="text-lg font-semibold mb-4">Default Settings</legend>
+
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Currency</label>
+              <label htmlFor={currencyId} className="block text-sm font-medium text-gray-700 mb-1">Currency</label>
               <select
+                id={currencyId}
                 value={settings.defaults.currency}
                 onChange={(e) => setSettings({ ...settings, defaults: { ...settings.defaults, currency: e.target.value } })}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
@@ -153,8 +186,9 @@ export default function Settings() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Tax Rate (%)</label>
+              <label htmlFor={taxRateId} className="block text-sm font-medium text-gray-700 mb-1">Tax Rate (%)</label>
               <input
+                id={taxRateId}
                 type="number"
                 value={settings.defaults.taxPercent}
                 onChange={(e) => setSettings({ ...settings, defaults: { ...settings.defaults, taxPercent: Number(e.target.value) } })}
@@ -165,8 +199,9 @@ export default function Settings() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Payment Terms</label>
+              <label htmlFor={paymentTermsId} className="block text-sm font-medium text-gray-700 mb-1">Payment Terms</label>
               <select
+                id={paymentTermsId}
                 value={settings.defaults.paymentTerms}
                 onChange={(e) => setSettings({ ...settings, defaults: { ...settings.defaults, paymentTerms: e.target.value } })}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
@@ -179,22 +214,23 @@ export default function Settings() {
               </select>
             </div>
           </div>
-        </div>
+        </fieldset>
 
-        <div className="bg-white rounded-lg shadow p-6">
-          <h2 className="text-lg font-semibold mb-4">Banking Details</h2>
+        <fieldset className="bg-white rounded-lg shadow p-6">
+          <legend className="text-lg font-semibold mb-4">Banking Details</legend>
           <p className="text-sm text-gray-600 mb-4">
             These details will be included in invoices and reminder emails for bank transfer payments.
           </p>
-          
+
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Banking Country</label>
+              <label htmlFor={bankingCountryId} className="block text-sm font-medium text-gray-700 mb-1">Banking Country</label>
               <select
+                id={bankingCountryId}
                 value={settings.banking.country}
-                onChange={(e) => setSettings({ 
-                  ...settings, 
-                  banking: { ...settings.banking, country: e.target.value } 
+                onChange={(e) => setSettings({
+                  ...settings,
+                  banking: { ...settings.banking, country: e.target.value }
                 })}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
               >
@@ -207,16 +243,17 @@ export default function Settings() {
               <>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Bank Name</label>
+                    <label htmlFor={ukBankNameId} className="block text-sm font-medium text-gray-700 mb-1">Bank Name</label>
                     <input
+                      id={ukBankNameId}
                       type="text"
                       value={settings.banking.uk.bankName}
-                      onChange={(e) => setSettings({ 
-                        ...settings, 
-                        banking: { 
-                          ...settings.banking, 
-                          uk: { ...settings.banking.uk, bankName: e.target.value } 
-                        } 
+                      onChange={(e) => setSettings({
+                        ...settings,
+                        banking: {
+                          ...settings.banking,
+                          uk: { ...settings.banking.uk, bankName: e.target.value }
+                        }
                       })}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
                       placeholder="e.g. Barclays Bank"
@@ -224,16 +261,17 @@ export default function Settings() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Account Name</label>
+                    <label htmlFor={ukAccountNameId} className="block text-sm font-medium text-gray-700 mb-1">Account Name</label>
                     <input
+                      id={ukAccountNameId}
                       type="text"
                       value={settings.banking.uk.accountName}
-                      onChange={(e) => setSettings({ 
-                        ...settings, 
-                        banking: { 
-                          ...settings.banking, 
-                          uk: { ...settings.banking.uk, accountName: e.target.value } 
-                        } 
+                      onChange={(e) => setSettings({
+                        ...settings,
+                        banking: {
+                          ...settings.banking,
+                          uk: { ...settings.banking.uk, accountName: e.target.value }
+                        }
                       })}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
                       placeholder="Account holder name"
@@ -241,16 +279,17 @@ export default function Settings() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Sort Code</label>
+                    <label htmlFor={ukSortCodeId} className="block text-sm font-medium text-gray-700 mb-1">Sort Code</label>
                     <input
+                      id={ukSortCodeId}
                       type="text"
                       value={settings.banking.uk.sortCode}
-                      onChange={(e) => setSettings({ 
-                        ...settings, 
-                        banking: { 
-                          ...settings.banking, 
-                          uk: { ...settings.banking.uk, sortCode: e.target.value.replace(/\D/g, '').slice(0, 6) } 
-                        } 
+                      onChange={(e) => setSettings({
+                        ...settings,
+                        banking: {
+                          ...settings.banking,
+                          uk: { ...settings.banking.uk, sortCode: e.target.value.replace(/\D/g, '').slice(0, 6) }
+                        }
                       })}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
                       placeholder="12-34-56"
@@ -259,16 +298,17 @@ export default function Settings() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Account Number</label>
+                    <label htmlFor={ukAccountNumberId} className="block text-sm font-medium text-gray-700 mb-1">Account Number</label>
                     <input
+                      id={ukAccountNumberId}
                       type="text"
                       value={settings.banking.uk.accountNumber}
-                      onChange={(e) => setSettings({ 
-                        ...settings, 
-                        banking: { 
-                          ...settings.banking, 
-                          uk: { ...settings.banking.uk, accountNumber: e.target.value.replace(/\D/g, '').slice(0, 8) } 
-                        } 
+                      onChange={(e) => setSettings({
+                        ...settings,
+                        banking: {
+                          ...settings.banking,
+                          uk: { ...settings.banking.uk, accountNumber: e.target.value.replace(/\D/g, '').slice(0, 8) }
+                        }
                       })}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
                       placeholder="12345678"
@@ -283,16 +323,17 @@ export default function Settings() {
               <>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Bank Name</label>
+                    <label htmlFor={usBankNameId} className="block text-sm font-medium text-gray-700 mb-1">Bank Name</label>
                     <input
+                      id={usBankNameId}
                       type="text"
                       value={settings.banking.us.bankName}
-                      onChange={(e) => setSettings({ 
-                        ...settings, 
-                        banking: { 
-                          ...settings.banking, 
-                          us: { ...settings.banking.us, bankName: e.target.value } 
-                        } 
+                      onChange={(e) => setSettings({
+                        ...settings,
+                        banking: {
+                          ...settings.banking,
+                          us: { ...settings.banking.us, bankName: e.target.value }
+                        }
                       })}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
                       placeholder="e.g. Bank of America"
@@ -300,16 +341,17 @@ export default function Settings() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Account Name</label>
+                    <label htmlFor={usAccountNameId} className="block text-sm font-medium text-gray-700 mb-1">Account Name</label>
                     <input
+                      id={usAccountNameId}
                       type="text"
                       value={settings.banking.us.accountName}
-                      onChange={(e) => setSettings({ 
-                        ...settings, 
-                        banking: { 
-                          ...settings.banking, 
-                          us: { ...settings.banking.us, accountName: e.target.value } 
-                        } 
+                      onChange={(e) => setSettings({
+                        ...settings,
+                        banking: {
+                          ...settings.banking,
+                          us: { ...settings.banking.us, accountName: e.target.value }
+                        }
                       })}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
                       placeholder="Account holder name"
@@ -317,16 +359,17 @@ export default function Settings() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Routing Number (ABA)</label>
+                    <label htmlFor={usRoutingNumberId} className="block text-sm font-medium text-gray-700 mb-1">Routing Number (ABA)</label>
                     <input
+                      id={usRoutingNumberId}
                       type="text"
                       value={settings.banking.us.routingNumber}
-                      onChange={(e) => setSettings({ 
-                        ...settings, 
-                        banking: { 
-                          ...settings.banking, 
-                          us: { ...settings.banking.us, routingNumber: e.target.value.replace(/\D/g, '').slice(0, 9) } 
-                        } 
+                      onChange={(e) => setSettings({
+                        ...settings,
+                        banking: {
+                          ...settings.banking,
+                          us: { ...settings.banking.us, routingNumber: e.target.value.replace(/\D/g, '').slice(0, 9) }
+                        }
                       })}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
                       placeholder="123456789"
@@ -335,16 +378,17 @@ export default function Settings() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Account Number</label>
+                    <label htmlFor={usAccountNumberId} className="block text-sm font-medium text-gray-700 mb-1">Account Number</label>
                     <input
+                      id={usAccountNumberId}
                       type="text"
                       value={settings.banking.us.accountNumber}
-                      onChange={(e) => setSettings({ 
-                        ...settings, 
-                        banking: { 
-                          ...settings.banking, 
-                          us: { ...settings.banking.us, accountNumber: e.target.value.replace(/\D/g, '').slice(0, 17) } 
-                        } 
+                      onChange={(e) => setSettings({
+                        ...settings,
+                        banking: {
+                          ...settings.banking,
+                          us: { ...settings.banking.us, accountNumber: e.target.value.replace(/\D/g, '').slice(0, 17) }
+                        }
                       })}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
                       placeholder="Account number"
@@ -358,34 +402,34 @@ export default function Settings() {
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
               <div className="flex">
                 <div className="flex-shrink-0">
-                  <svg className="h-5 w-5 text-blue-400" viewBox="0 0 20 20" fill="currentColor">
+                  <svg className="h-5 w-5 text-blue-400" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                     <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
                   </svg>
                 </div>
                 <div className="ml-3">
                   <p className="text-sm text-blue-800">
-                    <strong>Security Note:</strong> Your banking details are stored locally and included in invoice emails. 
+                    <strong>Security Note:</strong> Your banking details are stored locally and included in invoice emails.
                     Never share these details with untrusted parties.
                   </p>
                 </div>
               </div>
             </div>
           </div>
-        </div>
+        </fieldset>
 
-        <div className="bg-white rounded-lg shadow p-6">
-          <h2 className="text-lg font-semibold mb-4">Overdue Reminders</h2>
-          
+        <fieldset className="bg-white rounded-lg shadow p-6">
+          <legend className="text-lg font-semibold mb-4">Overdue Reminders</legend>
+
           <div className="space-y-4">
             <div className="flex items-center">
               <input
                 type="checkbox"
-                id="reminders-enabled"
+                id={remindersEnabledId}
                 checked={settings.reminders.enabled}
                 onChange={(e) => setSettings({ ...settings, reminders: { ...settings.reminders, enabled: e.target.checked } })}
                 className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
               />
-              <label htmlFor="reminders-enabled" className="ml-2 text-sm text-gray-700">
+              <label htmlFor={remindersEnabledId} className="ml-2 text-sm text-gray-700">
                 Enable automatic overdue reminders
               </label>
             </div>
@@ -394,8 +438,9 @@ export default function Settings() {
               <div className="ml-6 space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">First reminder (days after due date)</label>
+                    <label htmlFor={firstReminderId} className="block text-sm font-medium text-gray-700 mb-1">First reminder (days after due date)</label>
                     <input
+                      id={firstReminderId}
                       type="number"
                       min="0"
                       max="365"
@@ -406,8 +451,9 @@ export default function Settings() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Second reminder (days after due date)</label>
+                    <label htmlFor={secondReminderId} className="block text-sm font-medium text-gray-700 mb-1">Second reminder (days after due date)</label>
                     <input
+                      id={secondReminderId}
                       type="number"
                       min="0"
                       max="365"
@@ -418,8 +464,9 @@ export default function Settings() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Third reminder (days after due date)</label>
+                    <label htmlFor={thirdReminderId} className="block text-sm font-medium text-gray-700 mb-1">Third reminder (days after due date)</label>
                     <input
+                      id={thirdReminderId}
                       type="number"
                       min="0"
                       max="365"
@@ -430,8 +477,9 @@ export default function Settings() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Final reminder (days after due date)</label>
+                    <label htmlFor={finalReminderId} className="block text-sm font-medium text-gray-700 mb-1">Final reminder (days after due date)</label>
                     <input
+                      id={finalReminderId}
                       type="number"
                       min="0"
                       max="365"
@@ -450,12 +498,12 @@ export default function Settings() {
               </div>
             )}
           </div>
-        </div>
+        </fieldset>
 
         {user?.subscription && (
-          <div id="subscription" className="bg-white rounded-lg shadow p-6">
-            <h2 className="text-lg font-semibold mb-4">Subscription</h2>
-            
+          <fieldset id="subscription" className="bg-white rounded-lg shadow p-6">
+            <legend className="text-lg font-semibold mb-4">Subscription</legend>
+
             <div className="space-y-4">
               <div className="flex justify-between items-center p-4 border rounded-lg">
                 <div>
@@ -488,16 +536,16 @@ export default function Settings() {
                 </div>
                 <div className="flex gap-2">
                   {user.subscription.status === 'trial_expired' && (
-                    <button className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors">
+                    <button className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition-colors">
                       Upgrade Now
                     </button>
                   )}
                   {['trialing', 'active'].includes(user.subscription.status) && (
                     <>
-                      <button className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
+                      <button className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition-colors">
                         Update Payment
                       </button>
-                      <button className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
+                      <button className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition-colors">
                         Cancel
                       </button>
                     </>
@@ -509,8 +557,8 @@ export default function Settings() {
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                   <h4 className="font-medium text-blue-800 mb-2">Free Trial Active</h4>
                   <p className="text-sm text-blue-700">
-                    You're currently on a 7-day free trial. Your card will be automatically charged 
-                    {user.subscription.trialEnd && ` on ${formatDate(user.subscription.trialEnd)}`} 
+                    You're currently on a 7-day free trial. Your card will be automatically charged
+                    {user.subscription.trialEnd && ` on ${formatDate(user.subscription.trialEnd)}`}
                     unless you cancel before then.
                   </p>
                 </div>
@@ -534,11 +582,11 @@ export default function Settings() {
                 </div>
               )}
             </div>
-          </div>
+          </fieldset>
         )}
 
         <div className="flex justify-end">
-          <button type="submit" className="px-6 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors">
+          <button type="submit" className="px-6 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition-colors">
             Save Settings
           </button>
         </div>
@@ -546,5 +594,3 @@ export default function Settings() {
     </div>
   );
 }
-
-

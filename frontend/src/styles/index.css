@@ -7,16 +7,61 @@
     @apply bg-gray-50 text-gray-900;
     font-feature-settings: "rlig" 1, "calt" 1;
   }
+
+  /* Visible focus indicators for keyboard navigation */
+  *:focus-visible {
+    @apply outline-2 outline-offset-2 outline-primary-500;
+    outline-style: solid;
+  }
+
+  /* Remove default focus outline only when not using keyboard */
+  :focus:not(:focus-visible) {
+    outline: none;
+  }
+}
+
+@layer components {
+  /* Skip navigation link */
+  .skip-link {
+    @apply absolute -top-full left-4 z-[100] bg-primary-600 text-white px-4 py-2 rounded-b-lg font-medium;
+    transition: top 0.2s ease;
+  }
+  .skip-link:focus {
+    @apply top-0;
+  }
 }
 
 @layer utilities {
   .animate-slide-in {
     animation: slideIn 0.3s ease-out;
   }
-  
+
   .animate-fade-in {
     animation: fadeIn 0.3s ease-out;
   }
+
+  /* Screen reader only utility */
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
+  }
 }
 
-
+/* Respect reduced motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

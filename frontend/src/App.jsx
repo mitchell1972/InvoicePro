@@ -4,6 +4,7 @@ import { Elements } from '@stripe/react-stripe-js';
 import { loadStripe } from '@stripe/stripe-js';
 import { VITE_STRIPE_PUBLISHABLE_KEY } from './config/env';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import ErrorBoundary from './components/ErrorBoundary';
 import LoginPage from './components/LoginPage';
 import RegisterPage from './components/RegisterPage';
 import Dashboard from './components/Dashboard';
@@ -12,6 +13,7 @@ import InvoiceDetail from './components/InvoiceDetail';
 import Settings from './components/Settings';
 import PaymentPage from './components/PaymentPage';
 import Navbar from './components/Navbar';
+import NotFoundPage from './components/NotFoundPage';
 
 // Only load Stripe if we have a valid key
 let stripePromise = null;
@@ -30,9 +32,21 @@ function ProtectedRoute({ children }) {
 
 function AppLayout({ children }) {
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 flex flex-col">
+      <a href="#main-content" className="skip-link">
+        Skip to main content
+      </a>
       <Navbar />
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">{children}</main>
+      <main id="main-content" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1 w-full">
+        {children}
+      </main>
+      <footer className="border-t border-gray-200 bg-white mt-auto" role="contentinfo">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          <p className="text-center text-sm text-gray-500">
+            &copy; {new Date().getFullYear()} Invoice Pro. All rights reserved.
+          </p>
+        </div>
+      </footer>
     </div>
   );
 }
@@ -40,6 +54,7 @@ function AppLayout({ children }) {
 export default function App() {
   return (
     <AuthProvider>
+      <ErrorBoundary>
       <Routes>
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
@@ -111,7 +126,9 @@ export default function App() {
           }
         />
         <Route path="/" element={<Navigate to="/dashboard" replace />} />
+        <Route path="*" element={<NotFoundPage />} />
       </Routes>
+      </ErrorBoundary>
     </AuthProvider>
   );
 }

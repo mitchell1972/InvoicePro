@@ -70,15 +70,15 @@ export default function PaymentPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-gray-500">Loading...</div>
+      <div className="min-h-screen flex items-center justify-center" role="status">
+        <div className="text-gray-500">Loading invoice...</div>
       </div>
     );
   }
 
   if (!invoice) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center" role="alert">
         <div className="text-center">
           <h1 className="text-2xl font-bold text-gray-900 mb-2">Invoice Not Found</h1>
           <p className="text-gray-600">This invoice may have been deleted or doesn't exist.</p>
@@ -191,7 +191,7 @@ export default function PaymentPage() {
             </div>
 
             {error && (
-              <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm">{error}</div>
+              <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm" role="alert">{error}</div>
             )}
 
             <button type="submit" disabled={!stripe || processing} className="w-full py-3 px-4 bg-primary-600 text-white font-medium rounded-lg hover:bg-primary-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors">

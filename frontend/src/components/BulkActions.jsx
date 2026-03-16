@@ -1,9 +1,26 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import apiClient from '../api/client';
 
 export default function BulkActions({ selectedInvoices, onSuccess }) {
   const [isProcessing, setIsProcessing] = useState(false);
   const [results, setResults] = useState(null);
+  const dialogRef = useRef(null);
+
+  // Handle Escape key and focus management for results modal
+  useEffect(() => {
+    if (!results) return;
+
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        setResults(null);
+      }
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    if (dialogRef.current) {
+      dialogRef.current.focus();
+    }
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [results]);
 
   const handleBulkSend = async () => {
     if (selectedInvoices.length === 0) {
@@ -12,7 +29,7 @@ export default function BulkActions({ selectedInvoices, onSuccess }) {
     }
 
     const draftInvoices = selectedInvoices.filter(invoice => invoice.status === 'Draft');
-    
+
     if (draftInvoices.length === 0) {
       alert('No draft invoices selected');
       return;
@@ -25,23 +42,18 @@ export default function BulkActions({ selectedInvoices, onSuccess }) {
     setIsProcessing(true);
     const sendResults = [];
 
-    // Get banking details from localStorage
     const settings = localStorage.getItem('invoiceSettings');
     const bankingDetails = settings ? JSON.parse(settings).banking : null;
 
     try {
       for (const invoice of draftInvoices) {
         try {
-          // Send invoice
           await apiClient.post('/invoices/send', {
             invoiceId: invoice.id,
             recipientEmail: invoice.client.email,
             bankingDetails
           });
-
-          // Update status
           await apiClient.put(`/invoices/${invoice.id}`, { status: 'Sent' });
-
           sendResults.push({
             invoice: invoice.number,
             client: invoice.client.name,
@@ -59,7 +71,6 @@ export default function BulkActions({ selectedInvoices, onSuccess }) {
           });
         }
       }
-
       setResults(sendResults);
       onSuccess();
     } finally {
@@ -74,7 +85,7 @@ export default function BulkActions({ selectedInvoices, onSuccess }) {
     }
 
     const sentInvoices = selectedInvoices.filter(invoice => invoice.status === 'Sent');
-    
+
     if (sentInvoices.length === 0) {
       alert('No sent invoices selected');
       return;
@@ -109,27 +120,27 @@ export default function BulkActions({ selectedInvoices, onSuccess }) {
 
   return (
     <>
-      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6" role="status" aria-live="polite">
         <div className="flex items-center justify-between">
           <div className="flex items-center">
-            <svg className="h-5 w-5 text-blue-600 mr-2" fill="currentColor" viewBox="0 0 20 20">
+            <svg className="h-5 w-5 text-blue-600 mr-2" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
               <path fillRule="evenodd" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" clipRule="evenodd" />
             </svg>
             <span className="text-blue-800 font-medium">{selectedInvoices.length} invoice(s) selected</span>
           </div>
-          
+
           <div className="flex gap-2">
             <button
               onClick={handleBulkSend}
               disabled={isProcessing}
-              className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:opacity-50 transition-colors text-sm"
+              className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:opacity-50 transition-colors text-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
             >
               {isProcessing ? 'Sending...' : 'Send Selected'}
             </button>
             <button
               onClick={handleBulkMarkPaid}
               disabled={isProcessing}
-              className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 transition-colors text-sm"
+              className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 transition-colors text-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
             >
               {isProcessing ? 'Processing...' : 'Mark as Paid'}
             </button>
@@ -138,26 +149,27 @@ export default function BulkActions({ selectedInvoices, onSuccess }) {
       </div>
 
       {results && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[80vh] overflow-hidden">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50" role="dialog" aria-modal="true" aria-labelledby="bulk-results-title">
+          <div ref={dialogRef} tabIndex={-1} className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[80vh] overflow-hidden outline-none">
             <div className="flex justify-between items-center p-6 border-b border-gray-200">
-              <h2 className="text-xl font-semibold text-gray-900">Bulk Send Results</h2>
+              <h2 id="bulk-results-title" className="text-xl font-semibold text-gray-900">Bulk Send Results</h2>
               <button
                 onClick={closeResults}
-                className="text-gray-400 hover:text-gray-600 transition-colors"
+                className="text-gray-400 hover:text-gray-600 transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 rounded"
+                aria-label="Close results"
               >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>
             </div>
 
             <div className="p-6 max-h-[60vh] overflow-y-auto">
-              <div className="space-y-3">
+              <div className="space-y-3" role="list" aria-label="Send results">
                 {results.map((result, index) => (
-                  <div key={index} className={`p-4 rounded-lg border ${
-                    result.status === 'success' 
-                      ? 'bg-green-50 border-green-200' 
+                  <div key={index} role="listitem" className={`p-4 rounded-lg border ${
+                    result.status === 'success'
+                      ? 'bg-green-50 border-green-200'
                       : 'bg-red-50 border-red-200'
                   }`}>
                     <div className="flex items-center justify-between">
@@ -168,14 +180,14 @@ export default function BulkActions({ selectedInvoices, onSuccess }) {
                       <div className="flex items-center">
                         {result.status === 'success' ? (
                           <>
-                            <svg className="h-5 w-5 text-green-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                            <svg className="h-5 w-5 text-green-500 mr-2" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
                               <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                             </svg>
                             <span className="text-green-800 text-sm font-medium">Sent</span>
                           </>
                         ) : (
                           <>
-                            <svg className="h-5 w-5 text-red-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                            <svg className="h-5 w-5 text-red-500 mr-2" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
                               <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
                             </svg>
                             <span className="text-red-800 text-sm font-medium">Failed</span>
@@ -190,30 +202,30 @@ export default function BulkActions({ selectedInvoices, onSuccess }) {
                 ))}
               </div>
 
-              <div className="mt-6 p-4 bg-gray-50 rounded-lg">
+              <dl className="mt-6 p-4 bg-gray-50 rounded-lg">
                 <div className="flex items-center justify-between text-sm">
-                  <span className="text-gray-600">Total processed:</span>
-                  <span className="font-medium text-gray-900">{results.length}</span>
+                  <dt className="text-gray-600">Total processed:</dt>
+                  <dd className="font-medium text-gray-900">{results.length}</dd>
                 </div>
                 <div className="flex items-center justify-between text-sm">
-                  <span className="text-gray-600">Successful:</span>
-                  <span className="font-medium text-green-600">
+                  <dt className="text-gray-600">Successful:</dt>
+                  <dd className="font-medium text-green-600">
                     {results.filter(r => r.status === 'success').length}
-                  </span>
+                  </dd>
                 </div>
                 <div className="flex items-center justify-between text-sm">
-                  <span className="text-gray-600">Failed:</span>
-                  <span className="font-medium text-red-600">
+                  <dt className="text-gray-600">Failed:</dt>
+                  <dd className="font-medium text-red-600">
                     {results.filter(r => r.status === 'error').length}
-                  </span>
+                  </dd>
                 </div>
-              </div>
+              </dl>
             </div>
 
             <div className="flex justify-end p-6 border-t border-gray-200">
               <button
                 onClick={closeResults}
-                className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
+                className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
               >
                 Close
               </button>
